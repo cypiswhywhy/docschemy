@@ -18,6 +18,7 @@ Assumes `docs/` already exists following the `docs-init` convention: `tutorials`
 
 For each quadrant, ask whether *this specific change* affects it:
 - New/changed CLI flags, API endpoints, config keys → `reference`
+- New/changed project-local Claude Code skill or slash command (`.claude/skills/`, `.claude/commands/`) → `reference` (list it), and `how-to-guides` too if it changes how a user/operator accomplishes a task
 - New setup/deploy/troubleshooting step, or an existing recipe now behaves differently → `how-to-guides`
 - Architecture, data flow, or a design decision changed → `explanation` (update Mermaid diagrams if the flow changed)
 - A new onboarding-relevant capability that changes the learning path → `tutorials`

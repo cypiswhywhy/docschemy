@@ -14,7 +14,7 @@ Never invent facts, features, flags, or behavior that isn't actually in the code
 
 ## 1. Survey before writing anything
 
-Read, in this order: `README.md`, any existing `docs/` or scattered `*.md` files, `package.json`/`pyproject.toml`/`Cargo.toml`/etc. for name/description/scripts, the CLI entrypoint or main API surface, CI config, and code comments/docstrings that explain non-obvious behavior. Build a mental model of what the project actually does before deciding structure.
+Read, in this order: `README.md`, any existing `docs/` or scattered `*.md` files, `package.json`/`pyproject.toml`/`Cargo.toml`/etc. for name/description/scripts, the CLI entrypoint or main API surface, `.claude/skills/*/SKILL.md` and `.claude/commands/*.md` (project-local Claude Code skills/slash commands, if the repo defines any), CI config, and code comments/docstrings that explain non-obvious behavior. Build a mental model of what the project actually does before deciding structure.
 
 ## 2. Decide which quadrants apply
 
@@ -22,7 +22,7 @@ Don't create all four by default. Populate a quadrant only if it earns its keep:
 
 - **Tutorials** (`docs/tutorials/`) — only if there's a real learning-oriented onboarding path (e.g. a library/framework someone needs to learn by doing). Skip for scripts, internal pipelines, and most services.
 - **How-To Guides** (`docs/how-to-guides/`) — goal-oriented recipes: install, configure, deploy, run common tasks, troubleshoot. Include if there's more than one thing a user/operator would need to *do* with this project.
-- **Reference** (`docs/reference/`) — CLI flags, API endpoints, config schema, env vars. Include only if there's a real, stable surface worth looking up (skip for a one-off script with no options).
+- **Reference** (`docs/reference/`) — CLI flags, API endpoints, config schema, env vars, and project-local Claude Code skills/slash commands (`.claude/skills/`, `.claude/commands/`) if the repo defines any — list each with its name and what it does. Include only if there's a real, stable surface worth looking up (skip for a one-off script with no options).
 - **Explanation** (`docs/explanation/`) — architecture, internals, design decisions, Mermaid diagrams. Almost always include this one unless the project is genuinely trivial (a single-file script with no interesting structure).
 
 If it's a close call, state your reasoning briefly and ask the user to confirm rather than silently guessing.
