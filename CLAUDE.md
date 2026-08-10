@@ -26,7 +26,7 @@ There is no build, lint, or test step.
 
 ## The docs-init / docs-update skills
 
-The two skills currently in this repo (`docs-init`, `docs-update`) implement a documentation convention this user applies across *other* projects — worth understanding since it's the repo's reason for existing, and since this repo's own docs are meant to follow the same convention (they still use the older Diátaxis-only layout and need a `docs-init` reconcile to migrate):
+The two skills currently in this repo (`docs-init`, `docs-update`) implement a documentation convention this user applies across *other* projects — worth understanding since it's the repo's reason for existing, and since this repo's own docs follow the same convention:
 
 - Docs live in-repo, in Markdown. [Diátaxis](https://diataxis.fr/) governs *pages*; a fixed **structural strategy** governs *paths*, so every project has an identical layout and the audiences Diátaxis leaves out (contributors above all) get a home:
 

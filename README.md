@@ -1,17 +1,33 @@
 # docschemy
 
-A personal collection of [Claude Code](https://claude.com/claude-code) skills, kept in one repo and symlinked into every machine's `~/.claude/skills/`.
+A personal collection of [Claude Code](https://claude.com/claude-code) skills, kept in one repo and symlinked into every machine's `~/.claude/skills/`. The skills it currently ships generate and maintain project documentation in a fixed structure.
 
-## Quickstart
+## Install
 
 ```sh
 make install
 ```
 
-This symlinks each skill under `skills/` into `~/.claude/skills/`, so future edits here take effect without reinstalling.
+Full instructions, including what happens when a skill name is already taken, are in [Install the skills](docs/usage/install.md).
 
-## Docs
+## Usage
 
-- [How-To Guides](docs/how-to-guides.md) — install the skills, add or change one, use them on another project
-- [Reference](docs/reference/README.md) — skill catalog, `SKILL.md` format, repo layout, Makefile targets
-- [Explanation](docs/explanation.md) — why this repo exists, why symlinks, why two documentation skills
+From a Claude Code session in any other project:
+
+```text
+/docs-init
+```
+
+See [Usage](docs/usage/README.md) for running both skills and choosing between them.
+
+## Reference
+
+Skill catalog, `SKILL.md` frontmatter, repo layout and Makefile targets — [Reference](docs/reference/README.md).
+
+## Internals
+
+How skills reach Claude Code, the documentation convention they encode, and the decisions behind both, for anyone working on this repo — [Internals](docs/internals/README.md).
+
+## Contributing
+
+Adding or changing a skill: [CONTRIBUTING.md](CONTRIBUTING.md).

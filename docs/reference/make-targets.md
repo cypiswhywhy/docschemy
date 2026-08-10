@@ -4,7 +4,7 @@
 
 | Target | Effect |
 |---|---|
-| `install` | Symlinks each `skills/<name>/` into `$HOME/.claude/skills/<name>`. Idempotent, and never clobbers a path it didn't create — see [Install all skills](../how-to-guides.md#install-all-skills) for the three outcomes per skill. |
+| `install` | Symlinks each `skills/<name>/` into `$HOME/.claude/skills/<name>`. Idempotent, and never clobbers a path it didn't create — see [Install the skills](../usage/install.md#what-happens-per-skill) for the three outcomes per skill. |
 
 ## Variables
 

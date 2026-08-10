@@ -1,7 +1,7 @@
 # docschemy docs
 
-- [How-To Guides](how-to-guides.md) — install the skills, add or change one, use them on another project
+- [Usage](usage/README.md) — for people installing the skills and running them on their own projects
 - [Reference](reference/README.md) — skill catalog, `SKILL.md` format, repo layout, Makefile targets
-- [Explanation](explanation.md) — why this repo exists, why symlinks, why two documentation skills
+- [Internals](internals/README.md) — for engineers: architecture, the documentation convention, and the decisions behind both
 
-There is no `tutorials` quadrant: the repo has no learning-by-doing path, only recipes.
+Working on the skills themselves starts at [CONTRIBUTING.md](../CONTRIBUTING.md).

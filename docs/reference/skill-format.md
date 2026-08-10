@@ -5,7 +5,7 @@ A skill is a directory `skills/<skill-name>/` containing a `SKILL.md`. The file 
 ```markdown
 ---
 name: docs-update
-description: Update an existing Diátaxis-structured docs/ directory …
+description: Update an existing docs/ structure (created by docs-init …
 ---
 
 # docs-update
