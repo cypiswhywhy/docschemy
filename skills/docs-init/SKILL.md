@@ -11,11 +11,14 @@ Sets up or updates a project's documentation using a fixed **structural strategy
 **Reconcile mode**: docs already follow this convention, or the older Diátaxis-only version of it (`docs/tutorials`, `docs/how-to-guides`, `docs/explanation` at the top level), but may be incomplete, stale, or unmigrated. §3 has the migration mapping.
 **Adopt mode**: docs follow a *different deliberate convention* (audience split of another shape, wiki export, a published site with live URLs). Don't silently restructure. Name the costs first — published URLs break (no redirects unless added), the site-generator config needs a rewrite, and the repo's own docs-style guide (if it has one) must be rewritten too — then ask the user whether to migrate to this convention or keep theirs.
 
+Three sibling skills share this convention and defer to each other: `docs-update` reflects one code change, `docs-edit` applies a person's requested improvement, `docs-search` answers a question read-only. This skill owns the whole-tree work — scaffolding, migration, and the naming / visuals / redundancy audits.
+
 Three standing rules for all content work:
 
 - **Never invent** facts, features, flags, or behavior that isn't actually in the code/config. If something is genuinely unclear from the repo, write a `<!-- TODO: verify -->` marker instead of guessing. This binds hardest on `CONTRIBUTING.md` (§7) and ADRs (§8), which are the easiest files to fill with plausible boilerplate that was never true of this repo.
 - **Trim on touch**: when migrating a page, fix stale claims you can *verify against the repo* (retired hosts, references to files or build steps that no longer exist, leftover paste artifacts) instead of copying them forward. Verified cleanup yes, guessed rewrites no.
 - **Delete, don't archive**: a page (or section) whose entire subject is gone from the repo gets deleted, and every link to it removed — not left in place, not moved to an `old/` folder. Git holds the history. Confirm with the user before deleting a page whose subject you merely *couldn't find* rather than confirmed removed. ADRs are the one exception (§8): superseded decisions stay.
+- **Honor recorded preferences**: read the `## Docs preferences` block in the project's `CLAUDE.md` (and `~/.claude/CLAUDE.md`) before writing anything, and apply it. Those bullets are how the user's style choices — and any structural override they deliberately made — survive across runs; a documented override is intent, not drift, so don't audit it back to the default. `docs-edit` is what writes that block.
 
 ## 1. Survey before writing anything
 

@@ -12,8 +12,10 @@ ADRs are append-only. Once accepted, a record is never edited and never deleted 
 | [0002](0002-split-init-and-update-into-two-skills.md) | Split documentation work into two skills rather than one | Accepted | 2026-07-07 |
 | [0003](0003-diagrams-as-code-by-default.md) | Make diagrams-as-code the default, in every section | Accepted | 2026-07-23 |
 | [0004](0004-wrap-diataxis-in-a-fixed-structure.md) | Wrap Diátaxis in a fixed structural strategy | Accepted | 2026-08-10 |
+| [0005](0005-split-docs-skills-by-trigger.md) | Split the documentation skills by what triggers them, not by cost alone | Accepted | 2026-08-13 |
+| [0006](0006-record-docs-preferences-in-claude-md.md) | Record docs preferences in `CLAUDE.md`, and let them override style but not verification | Accepted | 2026-08-13 |
 
-All four were reconstructed from the commits and rationale that already existed in the repo, so their dates are the dates of the decisions, not of the records.
+The first four were reconstructed from the commits and rationale that already existed in the repo, so their dates are the dates of the decisions, not of the records.
 
 ## Adding one
 

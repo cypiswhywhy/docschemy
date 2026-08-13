@@ -24,4 +24,4 @@ Incrementally updates `docs/` after a change — …
 
 `make install` symlinks the whole `skills/<skill-name>/` directory, so any supporting files placed beside `SKILL.md` are visible to Claude Code at the same path. `SKILL.md` itself is the only file the skill must have.
 
-Both skills in this repo are single-file; see [Skill catalog](skill-catalog.md).
+Every skill in this repo is single-file; see [Skill catalog](skill-catalog.md).

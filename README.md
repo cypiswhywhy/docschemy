@@ -1,6 +1,6 @@
 # docschemy
 
-A personal collection of [Claude Code](https://claude.com/claude-code) skills, kept in one repo and symlinked into every machine's `~/.claude/skills/`. The skills it currently ships generate and maintain project documentation in a fixed structure.
+A personal collection of [Claude Code](https://claude.com/claude-code) skills, kept in one repo and symlinked into every machine's `~/.claude/skills/`. The skills it currently ships generate, maintain and search project documentation in a fixed structure.
 
 ## Install
 
@@ -18,7 +18,7 @@ From a Claude Code session in any other project:
 /docs-init
 ```
 
-See [Usage](docs/usage/README.md) for running both skills and choosing between them.
+See [Usage](docs/usage/README.md) for running all four skills and choosing between them.
 
 ## Reference
 

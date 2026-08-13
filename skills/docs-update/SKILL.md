@@ -11,6 +11,10 @@ Assumes the structure `docs-init` creates already exists: root `README.md` and `
 
 If a *single* skeleton path is missing (say `docs/internals/adrs/`), create it with its landing page as part of this run rather than sending the user away — that's scaffolding, not restructuring.
 
+**Scope check before anything else.** This skill's input is a *change to the code*. If nothing changed and the user simply wants the docs to read better, that's `/docs-edit`; if they want to know what the docs say, that's `/docs-search` and it writes nothing. Both are cheaper than what follows.
+
+**Read the `## Docs preferences` block** in the project's `CLAUDE.md` (and `~/.claude/CLAUDE.md`) first, and apply it to everything you write. It records the user's style choices and any deliberate structural override — a page that deviates from the convention *because the block says so* is intent, not staleness, so leave it as it stands. `/docs-edit` maintains that block.
+
 ## 1. Determine the scope of the change
 
 - If invoked in the same conversation where the change was just made, use that context directly — don't re-scan the whole repo.
