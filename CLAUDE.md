@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 `docschemy` is the single source of truth for the user's personal Claude Code skills, shared across many unrelated projects. Each skill lives once under `skills/<name>/SKILL.md` and is symlinked (not copied) into `~/.claude/skills/<name>`, so editing a skill here immediately affects every project that uses it — no reinstall step.
 
-There is no application source code here; this repo *is* the skills + their docs.
+There is no application source code here; this repo *is* the skills + their docs, plus an optional local telemetry stack under `telemetry/` that the skills never touch.
 
 ## Commands
 
@@ -14,7 +14,15 @@ There is no application source code here; this repo *is* the skills + their docs
 make install
 ```
 
-The only command. It symlinks every directory under `skills/` into `~/.claude/skills/`. It's idempotent: already-linked skills are reported as such, and it never clobbers a pre-existing non-symlinked path (skips with a warning instead — the conflict must be resolved manually).
+Symlinks every directory under `skills/` into `~/.claude/skills/`. It's idempotent: already-linked skills are reported as such, and it never clobbers a pre-existing non-symlinked path (skips with a warning instead — the conflict must be resolved manually).
+
+```sh
+make enable-telemetry     # start the local telemetry stack, wire Claude Code to it
+make telemetry-status     # is it actually collecting?
+make disable-telemetry    # stop it, keep the data (purge-telemetry drops the data too)
+```
+
+The telemetry stack under `telemetry/` is optional and self-contained — nothing in `skills/` reads it. It runs five containers on loopback and keeps all data local. Docs: [usage](docs/usage/telemetry.md), [configuration](docs/reference/telemetry-configuration.md), [design](docs/internals/telemetry-pipeline.md).
 
 There is no build, lint, or test step.
 

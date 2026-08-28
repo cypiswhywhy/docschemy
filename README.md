@@ -2,6 +2,8 @@
 
 A personal collection of [Claude Code](https://claude.com/claude-code) skills, kept in one repo and symlinked into every machine's `~/.claude/skills/`. The skills it currently ships generate, maintain and search project documentation in a fixed structure.
 
+It also ships an optional local telemetry stack, so Claude Code sessions across every project can be monitored without any data leaving the machine.
+
 ## Install
 
 ```sh
@@ -19,6 +21,14 @@ From a Claude Code session in any other project:
 ```
 
 See [Usage](docs/usage/README.md) for running all four skills and choosing between them.
+
+## Telemetry
+
+```sh
+make enable-telemetry
+```
+
+Brings up a local Grafana on <http://localhost:3000> showing spend, latency, tool failures and traces for every Claude Code session on the machine. Everything runs in Docker on loopback — see [Collect telemetry from your Claude Code sessions](docs/usage/telemetry.md).
 
 ## Reference
 

@@ -1,0 +1,880 @@
+{
+  "uid": "claude-code-overview",
+  "title": "Claude Code \u2014 Overview",
+  "tags": [
+    "claude-code"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "refresh": "30s",
+  "time": {
+    "from": "now-7d",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "project",
+        "label": "Project",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "claude-loki"
+        },
+        "query": {
+          "label": "project",
+          "refId": "project",
+          "type": 1
+        },
+        "refresh": 2,
+        "includeAll": true,
+        "allValue": ".*",
+        "multi": true,
+        "current": {
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "row",
+      "title": "Spend and usage \u2014 exact, summed from per-request events",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "collapsed": false
+    },
+    {
+      "type": "stat",
+      "id": 1,
+      "title": "Spend",
+      "datasource": {
+        "type": "loki",
+        "uid": "claude-loki"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 5,
+        "x": 0,
+        "y": 1
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "decimals": 2,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "graphMode": "none",
+        "textMode": "auto",
+        "colorMode": "value"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(sum_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_request\" | unwrap cost_usd [$__range]))",
+          "queryType": "instant"
+        }
+      ],
+      "description": "Sum of cost_usd across every api_request event in range. Exact \u2014 not a PromQL rate estimate."
+    },
+    {
+      "type": "stat",
+      "id": 2,
+      "title": "Tokens",
+      "datasource": {
+        "type": "loki",
+        "uid": "claude-loki"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 5,
+        "x": 5,
+        "y": 1
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "graphMode": "none",
+        "textMode": "auto",
+        "colorMode": "value"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(sum_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_request\" | label_format tot=`{{ add .input_tokens .output_tokens .cache_read_tokens .cache_creation_tokens }}` | unwrap tot [$__range]))",
+          "queryType": "instant"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "id": 3,
+      "title": "API requests",
+      "datasource": {
+        "type": "loki",
+        "uid": "claude-loki"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 10,
+        "y": 1
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "graphMode": "none",
+        "textMode": "auto",
+        "colorMode": "value"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(count_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_request\" [$__range]))",
+          "queryType": "instant"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "id": 4,
+      "title": "Spend per request",
+      "datasource": {
+        "type": "loki",
+        "uid": "claude-loki"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 5,
+        "x": 14,
+        "y": 1
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "decimals": 4,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "graphMode": "none",
+        "textMode": "auto",
+        "colorMode": "value"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(sum_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_request\" | unwrap cost_usd [$__range])) / sum(count_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_request\" [$__range]))",
+          "queryType": "instant"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "id": 5,
+      "title": "Cache read share",
+      "datasource": {
+        "type": "loki",
+        "uid": "claude-loki"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 5,
+        "x": 19,
+        "y": 1
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "decimals": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "graphMode": "none",
+        "textMode": "auto",
+        "colorMode": "value"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(sum_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_request\" | unwrap cache_read_tokens [$__range])) / sum(sum_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_request\" | label_format tot=`{{ add .input_tokens .output_tokens .cache_read_tokens .cache_creation_tokens }}` | unwrap tot [$__range]))",
+          "queryType": "instant"
+        }
+      ],
+      "description": "Share of all tokens served from cache. Cache reads bill far below fresh input, so higher is cheaper."
+    },
+    {
+      "type": "row",
+      "title": "Where the money goes",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 6
+      },
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "id": 10,
+      "title": "Spend over time, by model",
+      "datasource": {
+        "type": "loki",
+        "uid": "claude-loki"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 16,
+        "x": 0,
+        "y": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "lineWidth": 0,
+            "showPoints": "never",
+            "stacking": {
+              "mode": "normal"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "sum"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (model) (sum_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_request\" | unwrap cost_usd [$__auto]))",
+          "queryType": "range",
+          "legendFormat": "{{model}}"
+        }
+      ]
+    },
+    {
+      "type": "piechart",
+      "id": 11,
+      "title": "Spend by project",
+      "datasource": {
+        "type": "loki",
+        "uid": "claude-loki"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "decimals": 2
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "values": [
+            "value"
+          ]
+        },
+        "pieType": "donut"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (project) (sum_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_request\" | unwrap cost_usd [$__range]))",
+          "queryType": "instant",
+          "legendFormat": "{{project}}"
+        }
+      ],
+      "description": "Requires OTEL_RESOURCE_ATTRIBUTES=project=<name>; sessions without it group under an empty label."
+    },
+    {
+      "type": "timeseries",
+      "id": 12,
+      "title": "Spend by query source",
+      "datasource": {
+        "type": "loki",
+        "uid": "claude-loki"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 15
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "lineWidth": 0,
+            "showPoints": "never",
+            "stacking": {
+              "mode": "normal"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "sum"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (query_source) (sum_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_request\" | unwrap cost_usd [$__auto]))",
+          "queryType": "range",
+          "legendFormat": "{{query_source}}"
+        }
+      ],
+      "description": "main is your conversation; subagent is spawned agents; auxiliary is background work such as session titles."
+    },
+    {
+      "type": "timeseries",
+      "id": 13,
+      "title": "Tokens by type",
+      "datasource": {
+        "type": "loki",
+        "uid": "claude-loki"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 15
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "lineWidth": 0,
+            "showPoints": "never",
+            "stacking": {
+              "mode": "normal"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "sum"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(sum_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_request\" | unwrap input_tokens [$__auto]))",
+          "queryType": "range",
+          "legendFormat": "input"
+        },
+        {
+          "refId": "B",
+          "expr": "sum(sum_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_request\" | unwrap output_tokens [$__auto]))",
+          "queryType": "range",
+          "legendFormat": "output"
+        },
+        {
+          "refId": "C",
+          "expr": "sum(sum_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_request\" | unwrap cache_read_tokens [$__auto]))",
+          "queryType": "range",
+          "legendFormat": "cacheRead"
+        },
+        {
+          "refId": "D",
+          "expr": "sum(sum_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_request\" | unwrap cache_creation_tokens [$__auto]))",
+          "queryType": "range",
+          "legendFormat": "cacheCreation"
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "Sessions and output \u2014 from metrics; counts are PromQL estimates, not exact",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 22
+      },
+      "collapsed": false
+    },
+    {
+      "type": "stat",
+      "id": 20,
+      "title": "Sessions \u2248",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "claude-prom"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 5,
+        "x": 0,
+        "y": 23
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "graphMode": "none",
+        "textMode": "auto",
+        "colorMode": "value"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(increase(claude_code_session_count_total{project=~\"$project\"}[$__range]))",
+          "instant": true
+        }
+      ],
+      "description": "increase() extrapolates at range boundaries, so this is an estimate. Only metrics carry session, commit, PR and line counts \u2014 no event equivalent exists."
+    },
+    {
+      "type": "stat",
+      "id": 21,
+      "title": "Active time \u2248",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "claude-prom"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 5,
+        "x": 5,
+        "y": 23
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "graphMode": "none",
+        "textMode": "auto",
+        "colorMode": "value"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(increase(claude_code_active_time_seconds_total{project=~\"$project\"}[$__range]))",
+          "instant": true
+        }
+      ],
+      "description": "User keyboard time plus CLI working time. Not wall-clock session length."
+    },
+    {
+      "type": "stat",
+      "id": 22,
+      "title": "Commits \u2248",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "claude-prom"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 10,
+        "y": 23
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "graphMode": "none",
+        "textMode": "auto",
+        "colorMode": "value"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(increase(claude_code_commit_count_total{project=~\"$project\"}[$__range]))",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "id": 23,
+      "title": "Pull requests \u2248",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "claude-prom"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 5,
+        "x": 14,
+        "y": 23
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "graphMode": "none",
+        "textMode": "auto",
+        "colorMode": "value"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(increase(claude_code_pull_request_count_total{project=~\"$project\"}[$__range]))",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "id": 24,
+      "title": "Lines changed \u2248",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "claude-prom"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 5,
+        "x": 19,
+        "y": 23
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "graphMode": "none",
+        "textMode": "auto",
+        "colorMode": "value"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(increase(claude_code_lines_of_code_count_total{project=~\"$project\"}[$__range]))",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "id": 25,
+      "title": "Lines of code changed",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "claude-prom"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 27
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "lineWidth": 0,
+            "showPoints": "never",
+            "stacking": {
+              "mode": "normal"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "sum"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (type) (increase(claude_code_lines_of_code_count_total{project=~\"$project\"}[$__interval]))",
+          "legendFormat": "{{type}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "id": 26,
+      "title": "Edit permission decisions",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "claude-prom"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 27
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "lineWidth": 0,
+            "showPoints": "never",
+            "stacking": {
+              "mode": "normal"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "sum"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (decision, tool_name) (increase(claude_code_code_edit_tool_decision_total{project=~\"$project\"}[$__interval]))",
+          "legendFormat": "{{tool_name}} {{decision}}"
+        }
+      ],
+      "description": "Rejections are edits Claude proposed and you turned down."
+    },
+    {
+      "type": "timeseries",
+      "id": 27,
+      "title": "Sessions started, by type",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "claude-prom"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 34
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "lineWidth": 0,
+            "showPoints": "never",
+            "stacking": {
+              "mode": "normal"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (start_type) (increase(claude_code_session_count_total{project=~\"$project\"}[$__interval]))",
+          "legendFormat": "{{start_type}}"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9096
+  log_level: warn
+
+common:
+  instance_addr: 127.0.0.1
+  path_prefix: /loki
+  storage:
+    filesystem:
+      chunks_directory: /loki/chunks
+      rules_directory: /loki/rules
+  replication_factor: 1
+  ring:
+    kvstore:
+      store: inmemory
+
+schema_config:
+  configs:
+    - from: 2024-01-01
+      store: tsdb
+      object_store: filesystem
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+
+limits_config:
+  allow_structured_metadata: true
+  reject_old_samples: false
+  retention_period: 2160h
+  volume_enabled: true
+  otlp_config:
+    resource_attributes:
+      ignore_defaults: true
+      attributes_config:
+        # Promote to real stream labels so dashboards can select on them.
+        # Everything else stays as structured metadata, filterable with `| key="v"`.
+        - action: index_label
+          attributes:
+            - service.name
+            - project
+
+compactor:
+  working_directory: /loki/compactor
+  retention_enabled: true
+  delete_request_store: filesystem
+
+ingester:
+  wal:
+    # Loki refuses writes when the disk holding its WAL crosses this fraction.
+    # Rootless Docker keeps volumes under $HOME, so this tracks /home, not /.
+    # Raising it does not create space -- check `make telemetry-status`.
+    disk_full_threshold: ${LOKI_WAL_DISK_THRESHOLD:0.95}
+
+querier:
+  max_concurrent: 4
+
+analytics:
+  reporting_enabled: false

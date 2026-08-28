@@ -1,0 +1,72 @@
+# Receives everything Claude Code emits and fans it out to the three stores.
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+    timeout: 5s
+    send_batch_size: 512
+
+  # Claude Code is configured to export delta temporality: a session's counters
+  # start at zero and the process exits when the session does. Converting to
+  # cumulative here is what lets `project` and `model` sums stay correct across
+  # many short-lived sessions without keeping session.id as a metric label.
+  deltatocumulative:
+    max_stale: 24h
+
+exporters:
+  # Scraped by Prometheus. resource_to_telemetry_conversion is what turns
+  # OTEL_RESOURCE_ATTRIBUTES (notably `project`) into queryable labels.
+  prometheus:
+    endpoint: 0.0.0.0:8889
+    resource_to_telemetry_conversion:
+      enabled: true
+    # OpenMetrics exposition. Intended to carry _created timestamps for
+    # Prometheus' created-timestamp-zero-ingestion, though this exporter is
+    # not observed to emit them; counts stay approximate either way, which is
+    # why spend is read from events instead (ADR 0008).
+    enable_open_metrics: true
+    # Default is 5m: a session's series would vanish from the scrape endpoint
+    # minutes after the session ended, breaking increase() continuity between
+    # short sessions. Claude Code sessions are short and sporadic.
+    metric_expiration: 24h
+
+  # Loki 3.x ingests OTLP natively; the exporter appends /v1/logs.
+  otlp_http/loki:
+    endpoint: http://loki:3100/otlp
+
+  otlp/tempo:
+    endpoint: tempo:4317
+    tls:
+      insecure: true
+
+service:
+  telemetry:
+    logs:
+      level: warn
+    metrics:
+      readers:
+        - pull:
+            exporter:
+              prometheus:
+                host: 0.0.0.0
+                port: 8888
+  pipelines:
+    metrics:
+      receivers: [otlp]
+      processors: [deltatocumulative, batch]
+      exporters: [prometheus]
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp_http/loki]
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp/tempo]

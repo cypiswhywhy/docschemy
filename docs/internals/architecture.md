@@ -1,6 +1,8 @@
 # Architecture
 
-`docschemy` has no application source. The repo *is* a set of skill definitions plus the one-line installer that publishes them, so its architecture is entirely about where a skill file lives and how Claude Code comes to read it.
+`docschemy` has no application source. The repo *is* a set of skill definitions plus the one-line installer that publishes them, so this page is entirely about where a skill file lives and how Claude Code comes to read it.
+
+The repo also ships a local telemetry stack under `telemetry/`, which shares nothing with the skills beyond the Makefile — it has its own page, [The telemetry pipeline](telemetry-pipeline.md).
 
 ## Skills are linked, not copied
 

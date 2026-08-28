@@ -4,6 +4,7 @@
 
 - `git` and `make` — the repo has no language runtime, no dependencies and no package manifest. `make install` is POSIX `sh` and GNU `make`.
 - [Claude Code](https://claude.com/claude-code), to run the skills you're editing.
+- Only if you're changing `telemetry/`: Docker with the Compose plugin, plus `jq` and `curl`. Nothing under `skills/` needs them.
 
 ## Set up
 
@@ -11,11 +12,13 @@ Clone the repo and run `make install` once — the same procedure as [installing
 
 ## Tests and linting
 
-There are none. The Makefile has a single `install` target, there is no CI, and the repo's content is Markdown. Verification is running the skill you changed against a real project and reading its output.
+There are none. There is no CI, and the repo's content is Markdown. Verification is running the skill you changed against a real project and reading its output.
+
+For a change to `telemetry/`, verification is `make enable-telemetry && make telemetry-status`, then starting a Claude Code session and confirming the numbers arrive. Note that mounted config files are not part of Compose's config hash, so editing `telemetry/otelcol/config.yaml` or `telemetry/loki/loki.yaml` needs `docker compose restart <service>` — `up -d` will report the container as already current. [The telemetry pipeline](docs/internals/telemetry-pipeline.md#failure-modes-worth-knowing) covers the other traps.
 
 ## Project layout
 
-`skills/<name>/SKILL.md` is the whole payload; `docs/` documents it. Every directory directly under `skills/` is a skill, and nothing else in the repo is — see [Architecture](docs/internals/architecture.md) for why the boundary is positional, and [Repo layout](docs/reference/repo-layout.md) for what sits where.
+`skills/<name>/SKILL.md` is the payload; `docs/` documents it, and `telemetry/` is a self-contained stack the skills never touch. Every directory directly under `skills/` is a skill, and nothing else in the repo is — see [Architecture](docs/internals/architecture.md) for why the boundary is positional, and [Repo layout](docs/reference/repo-layout.md) for what sits where.
 
 ## Making a change
 
@@ -40,7 +43,7 @@ Work on a branch off `main` and open a pull request; commit subjects in this rep
 
 ## Design decisions
 
-A change that alters the skills' convention, or how skills reach Claude Code, gets an ADR — see [the log and its template](docs/internals/adrs/README.md). Routine wording and rule refinements don't.
+A change that alters the skills' convention, how skills reach Claude Code, or the shape of the telemetry pipeline gets an ADR — see [the log and its template](docs/internals/adrs/README.md). Routine wording and rule refinements don't.
 
 ## Documentation
 

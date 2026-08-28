@@ -2,13 +2,18 @@
 
 ```text
 docschemy/
-├── Makefile              # `make install` — see make-targets.md
+├── Makefile              # install + telemetry targets — see make-targets.md
 ├── CLAUDE.md             # repo guidance for Claude Code itself
 ├── README.md             # pitch + quickstart + links into docs/
 ├── CONTRIBUTING.md       # how to work on the skills
 ├── skills/
 │   └── <skill-name>/
 │       └── SKILL.md      # skill definition — see skill-format.md
+├── telemetry/            # the local monitoring stack — see telemetry-configuration.md
+│   ├── compose.yaml      # collector, Prometheus, Loki, Tempo, Grafana
+│   ├── bin/              # enable / disable / status scripts
+│   ├── grafana/          # provisioned datasources and dashboards
+│   └── shell/            # the per-project tagging wrapper
 └── docs/                 # this documentation
     ├── usage/            # installing and running the skills
     ├── reference/        # these pages
@@ -16,7 +21,9 @@ docschemy/
     └── assets/           # figures (currently empty — all diagrams are inline Mermaid)
 ```
 
-`skills/` is the entire payload of the repo — there is no application source, no build output, and no generated files. Every directory directly under `skills/` is treated as a skill by [`make install`](make-targets.md); nothing else in the repo is.
+`skills/` is the payload the repo exists to publish — no application source, no build output, no generated files. Every directory directly under `skills/` is treated as a skill by [`make install`](make-targets.md); nothing else in the repo is, `telemetry/` included.
+
+`telemetry/` is the one part of the repo that is infrastructure rather than content. It is self-contained and optional: nothing under `skills/` reads it, and the skills work whether or not it has ever been started.
 
 The skills currently shipped are listed in [Skill catalog](skill-catalog.md).
 

@@ -1,0 +1,16 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # Claude Code metrics, republished by the collector.
+  - job_name: claude-code
+    honor_labels: true
+    static_configs:
+      - targets: ["otelcol:8889"]
+
+  # The collector's own health, so `make telemetry-status` can tell
+  # "nothing arrived" apart from "the pipeline is broken".
+  - job_name: otelcol
+    static_configs:
+      - targets: ["otelcol:8888"]
