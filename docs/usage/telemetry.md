@@ -28,7 +28,7 @@ flowchart TD
     B --> C["docker compose up"]
     C --> D["wait until all five<br/>containers answer as ready"]
     D --> E["merge the OTLP env block<br/>into ~/.claude/settings.json"]
-    E --> F["add the project-tagging<br/>wrapper to ~/.zshrc"]
+    E --> F["install the tagging shim<br/>and put it on PATH"]
     F --> G(["Grafana on :3000"])
 ```
 
@@ -54,12 +54,24 @@ explains why the two differ.
 
 ## Per-project breakdowns
 
-The shell wrapper added to `~/.zshrc` tags each session with the name of the git
-repository it starts in, which is what fills the **Project** dropdown and the
-spend-by-project panel. Run `exec zsh` once to load it.
+Nothing to configure per project. `make enable-telemetry` installs a small
+`claude` shim ahead of the real binary on `PATH`; it reads the git repository
+name of wherever you started and tags the session with it. That is what fills
+the **Project** dropdown and the spend-by-project panel.
 
-Sessions started without it still record everything else; they group under an
-empty project label. To tag one by hand:
+It is installed on `PATH` twice, because terminals and everything else get
+their environment from different places:
+
+- **Terminals** — via `~/.zshrc`. Run `exec zsh` once to pick it up.
+- **The desktop app, IDE extensions, scheduled jobs** — via
+  `~/.config/environment.d/`, which is read at login. Log out and back in once.
+
+Until you do both, the launches you have not covered still record everything
+else; they just group under an empty project label. `make telemetry-status`
+reports how many events in the last 24 hours arrived untagged.
+
+To override the name for one session — a worktree that should report as its
+parent repo, say — set it yourself and the shim leaves it alone:
 
 ```sh
 OTEL_RESOURCE_ATTRIBUTES=project=my-repo claude
@@ -83,8 +95,8 @@ make disable-telemetry   # stops the stack, keeps the data
 make purge-telemetry     # stops the stack, deletes the data
 ```
 
-Both remove the settings block and the shell wrapper the installer added,
-leaving any OTel settings you added yourself alone. After
+Both remove the settings block, the tagging shim and the `PATH` entries the
+installer added, leaving any OTel settings you added yourself alone. After
 `make disable-telemetry`, running `make enable-telemetry` again picks up where
 you left off.
 

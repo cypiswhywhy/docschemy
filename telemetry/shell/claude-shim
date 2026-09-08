@@ -1,0 +1,62 @@
+#!/bin/sh
+# PATH shim for Claude Code: derives the project name from the working
+# directory's git root and exports it as an OTel resource attribute, so
+# Grafana can break spend down per repo without a per-project env var.
+#
+# This is a shim rather than a shell function because a function only exists
+# inside an interactive shell. Sessions started by the desktop app, an IDE
+# extension, or a cron job never read ~/.zshrc, and so used to arrive with no
+# project label at all. A shim earlier on PATH catches every exec.
+#
+# Installed as <shim dir>/claude; the real binary is found by rescanning PATH
+# with the shim's own directory skipped.
+
+set -u
+
+self_dir=$(CDPATH= cd -- "$(dirname -- "$0")" 2>/dev/null && pwd -P) || self_dir=
+
+# Locate the real claude: first executable named `claude` on PATH that does not
+# live in this shim's directory. CLAUDE_REAL_BIN overrides the search.
+real="${CLAUDE_REAL_BIN:-}"
+if [ -z "$real" ]; then
+  saved_ifs=$IFS
+  IFS=:
+  for dir in $PATH; do
+    [ -n "$dir" ] || dir=.
+    resolved=$(CDPATH= cd -- "$dir" 2>/dev/null && pwd -P) || continue
+    [ "$resolved" = "$self_dir" ] && continue
+    if [ -f "$dir/claude" ] && [ -x "$dir/claude" ]; then
+      real=$dir/claude
+      break
+    fi
+  done
+  IFS=$saved_ifs
+fi
+
+if [ -z "$real" ]; then
+  printf 'claude shim: no real claude found on PATH (looked past %s)\n' "${self_dir:-?}" >&2
+  printf '             set CLAUDE_REAL_BIN to its full path\n' >&2
+  exit 127
+fi
+
+# An explicit project= the caller already set wins: overriding it would make
+# the documented per-session escape hatch silently useless.
+case ",${OTEL_RESOURCE_ATTRIBUTES:-}," in
+  *,project=*) exec "$real" "$@" ;;
+esac
+
+project=$(basename "$(git rev-parse --show-toplevel 2>/dev/null || pwd)" 2>/dev/null) || project=
+# OTEL_RESOURCE_ATTRIBUTES is W3C Baggage: a `,` or `=` in the value would be
+# read as a second attribute, so fold everything else down to `_`.
+project=$(printf '%s' "$project" | tr -c 'A-Za-z0-9._-' '_')
+
+if [ -n "$project" ]; then
+  if [ -n "${OTEL_RESOURCE_ATTRIBUTES:-}" ]; then
+    OTEL_RESOURCE_ATTRIBUTES="${OTEL_RESOURCE_ATTRIBUTES},project=${project}"
+  else
+    OTEL_RESOURCE_ATTRIBUTES="project=${project}"
+  fi
+  export OTEL_RESOURCE_ATTRIBUTES
+fi
+
+exec "$real" "$@"
