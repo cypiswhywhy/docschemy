@@ -7,7 +7,7 @@ There is no build, lint, or test step. `install` publishes the skills; the
 |---|---|
 | `install` | Symlinks each `skills/<name>/` into `$HOME/.claude/skills/<name>`. Idempotent, and never clobbers a path it didn't create — see [Install the skills](../usage/install.md#what-happens-per-skill) for the three outcomes per skill. |
 | `enable-telemetry` | Starts the local telemetry stack and merges its settings into `~/.claude/settings.json`. Idempotent; preflights tools, ports and disk before touching anything. |
-| `disable-telemetry` | Stops the stack and removes the settings, the tagging shim and the `PATH` entries it added. Keeps collected data. |
+| `disable-telemetry` | Stops the stack and removes the settings, the tagging shim, the `PATH` entries it added and the desktop app's wrapper. Keeps collected data. |
 | `purge-telemetry` | The same, and deletes the data volumes. |
 | `telemetry-status` | Reports whether telemetry is being collected — endpoints, receipts, events stored and disk headroom — not just whether containers run. |
 

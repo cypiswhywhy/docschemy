@@ -80,28 +80,53 @@ by the files on the next reload.
 | Claude Code — Overview | `claude-code-overview` | Loki for spend, tokens and requests; Prometheus for session, commit, PR and line counts |
 | Claude Code — Deep Dive | `claude-code-deep-dive` | Loki for latency, tools, permissions and errors; Tempo for traces |
 
-## PATH shim
+## The tagging shim
 
 `telemetry/shell/claude-shim` is a `sh` script that sets
 `OTEL_RESOURCE_ATTRIBUTES=project=<repo>` from the current git root and then
 `exec`s the real binary, which it finds by rescanning `PATH` with its own
 directory skipped. `CLAUDE_REAL_BIN` overrides that search. A `project=` the
-caller already set is left alone, so a per-session override still wins.
+caller already set is left alone, so a per-session override still wins; an
+`OTEL_RESOURCE_ATTRIBUTES` set by the launcher is appended to, not replaced.
 
-`make enable-telemetry` installs it in three places; `make disable-telemetry`
-removes all three.
+`make enable-telemetry` installs it in four places; `make disable-telemetry`
+removes all four.
 
 | What | Path | Covers |
 |---|---|---|
 | The shim | `~/.claude/shims/claude` → this repo | — |
 | `PATH` for terminals | a marked block in `~/.zshrc` | sessions started from a shell |
-| `PATH` for everything else | `~/.config/environment.d/10-docschemy-claude-telemetry.conf` | the desktop app, IDE extensions, systemd user units |
+| `PATH` for everything else | `~/.config/environment.d/10-docschemy-claude-telemetry.conf` | IDE extensions, systemd user units |
+| The desktop app's own CLI | `~/.config/Claude/claude-code/<version>/claude` | the desktop app |
 
-The shim is symlinked rather than copied, so editing it here takes effect on the
-next launch. The `environment.d` file is read at login, so graphical sessions
-pick it up only after a re-login.
+The first three are one mechanism: the shim is symlinked rather than copied, so
+editing it here takes effect on the next launch, and the two `PATH` entries just
+put it ahead of the real binary. The `environment.d` file is read at login, so
+those sessions pick it up only after a re-login.
 
-It sets a different key from anything in `settings.json`, so the two never
+The fourth is separate, because the desktop app never consults `PATH` — it
+`exec`s a Claude Code build it downloads itself, by absolute path. There,
+`make enable-telemetry` moves the real binary to `claude.real` in the same
+directory and writes a generated wrapper in its place, marked with
+`# docschemy-claude-telemetry desktop shim` on its second line. The wrapper
+names `claude.real` through `CLAUDE_REAL_BIN` and hands off to the shared shim.
+
+Two properties of that install are deliberate:
+
+- **It is a copy, not a symlink.** An app update writing its new binary to that
+  path would follow a symlink and overwrite `telemetry/shell/claude-shim` in
+  this repo, breaking tagging for every launcher at once.
+- **It names `claude.real` explicitly.** A `PATH` scan from there would find the
+  terminal's separately-updated Claude Code, which is generally a different
+  version than the app expects to speak to.
+
+The app installs each CLI update into a *new* version directory, which arrives
+without the wrapper. `make telemetry-status` reports the state of every version
+directory it finds — `shimmed`, not shimmed (a warning naming the version), or a
+wrapper whose `claude.real` is missing (an error; that directory will not
+launch) — and `make enable-telemetry` re-applies it.
+
+The shim sets a different key from anything in `settings.json`, so the two never
 compete: shared transport settings come from the settings file, per-session
 identity from the environment.
 
@@ -113,9 +138,15 @@ reach them through Grafana's datasource proxy, which is what
 
 ```sh
 curl -sG http://localhost:3000/api/datasources/proxy/uid/claude-loki/loki/api/v1/query \
-  --data-urlencode 'query=sum(sum_over_time({service_name="claude-code"} | event_name="api_request" | unwrap cost_usd [24h]))'
+  --data-urlencode 'query=sum(sum_over_time({service_name=~"claude-code.*"} | event_name="api_request" | unwrap cost_usd [24h]))'
 ```
 
 Events carry `project` and `service_name` as stream labels; every other field
 (`model`, `cost_usd`, `duration_ms`, `tool_name`, `trace_id`, …) is structured
 metadata, filtered with `| key="value"` and summed with `| unwrap key`.
+
+`service_name` depends on the launcher: sessions started from a shell or an IDE
+report as `claude-code`, and the desktop app spawns its CLI with
+`OTEL_SERVICE_NAME=claude-code-desktop`. Match both with
+`service_name=~"claude-code.*"`, which is what the dashboards and
+`make telemetry-status` do; `terminal_type` still tells the two apart.

@@ -71,6 +71,42 @@ Only `service_name` and `project` are stream labels; everything else is
 structured metadata. That keeps the number of streams tiny — one per project —
 while leaving every field filterable.
 
+## One CLI, three launchers
+
+The same Claude Code binary is started in ways that differ enough to change what
+reaches the pipeline. Two of them resolve `claude` through `PATH`, so a shim
+placed earlier on `PATH` catches them ([ADR 0009](adrs/0009-tag-projects-with-a-path-shim.md)).
+The desktop app does not: it `exec`s a build it downloads and version-pins
+itself, by absolute path, and injects its own OTel environment at spawn.
+
+```mermaid
+flowchart LR
+    T["terminal"] -->|"PATH, via ~/.zshrc"| S
+    I["IDE extension,<br/>systemd user unit"] -->|"PATH, via environment.d"| S
+    D["desktop app"] -->|"absolute path to its<br/>own pinned CLI build"| W["generated wrapper in the<br/>version directory"]
+    W --> S["claude-shim<br/>appends project=&lt;git root&gt;"]
+    S --> CC["claude"]
+    CC -->|"service_name=claude-code<br/>or claude-code-desktop"| OC["otelcol"]
+```
+
+That injection has two consequences the rest of the stack has to absorb.
+
+The first is the name. The app sets `OTEL_SERVICE_NAME=claude-code-desktop`, so
+its sessions do not answer to `service_name="claude-code"` — a query pinned to
+that string silently returns nothing for them, however much they produced.
+Everything that reads events matches `service_name=~"claude-code.*"` instead,
+which keeps the two launchers distinguishable rather than flattening them.
+
+The second is that the project label had nowhere else to come from. The app also
+injects `OTEL_RESOURCE_ATTRIBUTES`, and Claude Code does not let a `settings.json`
+`env` entry override a variable the process already has, so per-project settings
+cannot supply it. Deriving it in the collector needs a path on the events, and no
+event type carries a working directory, a workspace or a session id to join on.
+What does hold is that the app spawns its CLI with the session's project as the
+working directory — the same thing the `PATH` shim reads — so a wrapper at that
+path derives the same name. [ADR 0010](adrs/0010-shim-the-desktop-apps-bundled-cli.md)
+records the choice and what it costs.
+
 ## Failure modes worth knowing
 
 **Loki stops accepting writes when its disk fills.** The guard trips at
@@ -88,6 +124,12 @@ points — enough to raise an alarm about a threshold that is not actually close
 are not part of the Compose config hash, so editing `otelcol/config.yaml` or
 `loki/loki.yaml` needs an explicit `docker compose restart <service>`; `up -d`
 alone will report the container as already up to date.
+
+**A desktop app CLI update silently drops project tagging.** The app installs
+each update into a new version directory, which arrives without the wrapper.
+Sessions keep recording; they just group under an empty project label again.
+Nothing in the install can prevent that, so `make telemetry-status` inspects
+every version directory it finds and names any that is unshimmed.
 
 **Running sessions never pick telemetry up.** It is read once at startup. Every
 enable and disable path says so, because it is the one part of the flow no

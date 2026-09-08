@@ -13,7 +13,7 @@ docschemy/
 │   ├── compose.yaml      # collector, Prometheus, Loki, Tempo, Grafana
 │   ├── bin/              # enable / disable / status scripts
 │   ├── grafana/          # provisioned datasources and dashboards
-│   └── shell/            # the per-project tagging PATH shim
+│   └── shell/            # the per-project tagging shim
 └── docs/                 # this documentation
     ├── usage/            # installing and running the skills
     ├── reference/        # these pages
