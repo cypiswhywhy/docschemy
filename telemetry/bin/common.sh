@@ -4,6 +4,9 @@ set -euo pipefail
 TELEMETRY_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SETTINGS="${CLAUDE_SETTINGS:-$HOME/.claude/settings.json}"
 ZSHRC="${CLAUDE_TELEMETRY_RC:-$HOME/.zshrc}"
+SHIM_DIR="${CLAUDE_SHIM_DIR:-$HOME/.claude/shims}"
+ENV_D="${CLAUDE_ENV_D:-$HOME/.config/environment.d}"
+ENV_D_FILE="$ENV_D/10-docschemy-claude-telemetry.conf"
 WRAPPER_BEGIN="# >>> docschemy claude telemetry >>>"
 WRAPPER_END="# <<< docschemy claude telemetry <<<"
 
@@ -73,4 +76,17 @@ docker_disk_pct() {
   local root; root="$(docker info --format '{{.DockerRootDir}}' 2>/dev/null || echo /var/lib/docker)"
   df -k --output=size,used "$root" 2>/dev/null | tail -1 \
     | awk '{ if ($1 > 0) printf "%d", ($2 * 100) / $1 }'
+}
+
+# Delete the marked block from a shell rc, if present. Returns 0 when it
+# removed something, 1 when there was nothing there. Used both to install a
+# newer block over an older one and to uninstall.
+rc_block_remove() {
+  local file="$1"
+  [ -f "$file" ] || return 1
+  grep -qF "$WRAPPER_BEGIN" "$file" || return 1
+  cp "$file" "$file.bak.$(date +%Y%m%d-%H%M%S)"
+  awk -v b="$WRAPPER_BEGIN" -v e="$WRAPPER_END" '
+    $0 == b { skip = 1 } skip != 1 { print } $0 == e { skip = 0 }' \
+    "$file" > "$file.tmp" && mv "$file.tmp" "$file"
 }

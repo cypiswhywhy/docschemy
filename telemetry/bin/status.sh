@@ -33,11 +33,26 @@ if [ -f "$SETTINGS" ] && jq -e '.env.CLAUDE_CODE_ENABLE_TELEMETRY == "1"' "$SETT
 else
   warn "not enabled in $SETTINGS — run 'make enable-telemetry'"
 fi
-if [ -f "$ZSHRC" ] && grep -qF "$WRAPPER_BEGIN" "$ZSHRC"; then
-  ok "per-project tagging wrapper installed"
+if [ -L "$SHIM_DIR/claude" ]; then
+  ok "claude shim linked in $SHIM_DIR"
 else
-  warn "no shell wrapper — sessions will not carry a project label"
+  warn "no claude shim — sessions will not carry a project label"
 fi
+if [ -f "$ZSHRC" ] && grep -qF "$WRAPPER_BEGIN" "$ZSHRC"; then
+  ok "shim on PATH for terminals (via $(basename "$ZSHRC"))"
+else
+  warn "$SHIM_DIR not added to PATH by $(basename "$ZSHRC")"
+fi
+if [ -f "$ENV_D_FILE" ]; then
+  ok "shim on PATH for the desktop app and IDEs (via environment.d)"
+else
+  warn "no environment.d entry — only terminal sessions get tagged"
+fi
+untagged="$(dc exec -T grafana curl -s --max-time 6 -G 'http://loki:3100/loki/api/v1/query' \
+        --data-urlencode 'query=sum(count_over_time({service_name="claude-code"} | project="" [24h]))' 2>/dev/null \
+        | jq -r '.data.result[0].value[1] // "0"')"
+[ "${untagged:-0}" = "0" ] && ok "every event in the last 24h carries a project" \
+  || warn "$untagged events in the last 24h have no project label"
 
 step "Data arriving"
 recv="$(dc exec -T grafana curl -s --max-time 4 http://otelcol:8888/metrics 2>/dev/null \

@@ -91,16 +91,51 @@ fi
 
 if [ "$INSTALL_WRAPPER" = "1" ]; then
   step "Per-project tagging"
-  if [ -f "$ZSHRC" ] && grep -qF "$WRAPPER_BEGIN" "$ZSHRC"; then
-    ok "shell wrapper already installed in $(basename "$ZSHRC")"
-  elif [ -f "$ZSHRC" ]; then
-    cp "$ZSHRC" "$ZSHRC.bak.$(date +%Y%m%d-%H%M%S)"
-    { printf '\n%s\n' "$WRAPPER_BEGIN"; cat "$TELEMETRY_DIR/shell/claude-project-tag.zsh"; printf '%s\n' "$WRAPPER_END"; } >> "$ZSHRC"
-    ok "added the project-tagging wrapper to $(basename "$ZSHRC")"
-    dim "tags each session with its git repo name; run 'exec zsh' to load it"
+
+  # The shim is symlinked, not copied, so editing it in the repo takes effect
+  # on the next launch -- the same contract as the skills.
+  mkdir -p "$SHIM_DIR"
+  if [ -e "$SHIM_DIR/claude" ] && [ ! -L "$SHIM_DIR/claude" ]; then
+    err "$SHIM_DIR/claude exists and is not a symlink — leaving it alone"
+    dim "move it aside and re-run"
   else
-    warn "no $ZSHRC found — skipping the wrapper"
-    dim "source telemetry/shell/claude-project-tag.zsh from your shell rc by hand"
+    ln -sfn "$TELEMETRY_DIR/shell/claude-shim" "$SHIM_DIR/claude"
+    ok "linked the claude shim into $SHIM_DIR"
+  fi
+
+  # Terminals. Replaces any older block, including the shell function this
+  # shim supersedes -- a leftover function would shadow the shim entirely.
+  if [ -f "$ZSHRC" ]; then
+    rc_block_remove "$ZSHRC" && dim "replaced the previous telemetry block"
+    {
+      printf '\n%s\n' "$WRAPPER_BEGIN"
+      printf '%s\n' "# Put the Claude Code shim ahead of the real binary, so every session is"
+      printf '%s\n' "# tagged with the project it starts in. See telemetry/shell/claude-shim."
+      printf '%s\n' "case \":\$PATH:\" in"
+      printf '%s\n' "  *\":$SHIM_DIR:\"*) ;;"
+      printf '%s\n' "  *) export PATH=\"$SHIM_DIR:\$PATH\" ;;"
+      printf '%s\n' "esac"
+      printf '%s\n' "$WRAPPER_END"
+    } >> "$ZSHRC"
+    ok "put $SHIM_DIR on PATH via $(basename "$ZSHRC")"
+    dim "run 'exec zsh' to pick it up in this terminal"
+  else
+    warn "no $ZSHRC found — add $SHIM_DIR to PATH by hand"
+  fi
+
+  # Everything that is not a terminal: the desktop app, IDE extensions and
+  # systemd user units never read a shell rc, so they need the graphical
+  # session's own PATH. Read at login, hence the restart note.
+  mkdir -p "$ENV_D"
+  new_conf="$(printf '%s\n' \
+    "# Managed by docschemy telemetry. Removed by 'make disable-telemetry'." \
+    "PATH=$SHIM_DIR:\$PATH")"
+  if [ -f "$ENV_D_FILE" ] && [ "$new_conf" = "$(cat "$ENV_D_FILE")" ]; then
+    ok "$(basename "$ENV_D_FILE") already in place"
+  else
+    printf '%s\n' "$new_conf" > "$ENV_D_FILE"
+    ok "wrote $ENV_D_FILE for non-terminal launches"
+    dim "the desktop app and IDE extensions pick this up after a re-login"
   fi
 fi
 

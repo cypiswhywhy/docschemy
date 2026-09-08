@@ -35,14 +35,29 @@ else
   warn "no readable $SETTINGS — nothing to unhook"
 fi
 
-if [ -f "$ZSHRC" ] && grep -qF "$WRAPPER_BEGIN" "$ZSHRC"; then
-  cp "$ZSHRC" "$ZSHRC.bak.$(date +%Y%m%d-%H%M%S)"
-  awk -v b="$WRAPPER_BEGIN" -v e="$WRAPPER_END" '
-    $0 == b { skip = 1 } skip != 1 { print } $0 == e { skip = 0 }' \
-    "$ZSHRC" > "$ZSHRC.tmp" && mv "$ZSHRC.tmp" "$ZSHRC"
-  ok "removed the project-tagging wrapper from $(basename "$ZSHRC")"
+step "Removing per-project tagging"
+if rc_block_remove "$ZSHRC"; then
+  ok "removed the PATH block from $(basename "$ZSHRC")"
 else
-  ok "no shell wrapper to remove"
+  ok "no PATH block in $(basename "$ZSHRC")"
+fi
+
+if [ -L "$SHIM_DIR/claude" ]; then
+  rm -f "$SHIM_DIR/claude"
+  rmdir "$SHIM_DIR" 2>/dev/null || true
+  ok "removed the claude shim from $SHIM_DIR"
+elif [ -e "$SHIM_DIR/claude" ]; then
+  warn "$SHIM_DIR/claude is not our symlink — left in place"
+else
+  ok "no claude shim to remove"
+fi
+
+if [ -f "$ENV_D_FILE" ]; then
+  rm -f "$ENV_D_FILE"
+  ok "removed $(basename "$ENV_D_FILE")"
+  dim "graphical sessions keep the old PATH until you log out"
+else
+  ok "no environment.d file to remove"
 fi
 
 step "Done"

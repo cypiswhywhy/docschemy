@@ -80,12 +80,26 @@ by the files on the next reload.
 | Claude Code — Overview | `claude-code-overview` | Loki for spend, tokens and requests; Prometheus for session, commit, PR and line counts |
 | Claude Code — Deep Dive | `claude-code-deep-dive` | Loki for latency, tools, permissions and errors; Tempo for traces |
 
-## Shell wrapper
+## PATH shim
 
-`telemetry/shell/claude-project-tag.zsh` defines a `claude` shell function that
-sets `OTEL_RESOURCE_ATTRIBUTES=project=<repo>` from the current git root before
-running the real binary. `make enable-telemetry` appends it to `~/.zshrc`
-between marker comments; `make disable-telemetry` removes that block.
+`telemetry/shell/claude-shim` is a `sh` script that sets
+`OTEL_RESOURCE_ATTRIBUTES=project=<repo>` from the current git root and then
+`exec`s the real binary, which it finds by rescanning `PATH` with its own
+directory skipped. `CLAUDE_REAL_BIN` overrides that search. A `project=` the
+caller already set is left alone, so a per-session override still wins.
+
+`make enable-telemetry` installs it in three places; `make disable-telemetry`
+removes all three.
+
+| What | Path | Covers |
+|---|---|---|
+| The shim | `~/.claude/shims/claude` → this repo | — |
+| `PATH` for terminals | a marked block in `~/.zshrc` | sessions started from a shell |
+| `PATH` for everything else | `~/.config/environment.d/10-docschemy-claude-telemetry.conf` | the desktop app, IDE extensions, systemd user units |
+
+The shim is symlinked rather than copied, so editing it here takes effect on the
+next launch. The `environment.d` file is read at login, so graphical sessions
+pick it up only after a re-login.
 
 It sets a different key from anything in `settings.json`, so the two never
 compete: shared transport settings come from the settings file, per-session
