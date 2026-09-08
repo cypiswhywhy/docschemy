@@ -48,28 +48,16 @@ if [ -f "$ENV_D_FILE" ]; then
 else
   warn "no environment.d entry — only terminal sessions get tagged"
 fi
-
-# The desktop app ignores PATH entirely and execs its own downloaded CLI. Each
-# update lands in a new, unshimmed directory and tagging stops without a word,
-# so this is the check that has to be loud.
-stale=""
-while IFS= read -r cli_dir; do
-  case "$(desktop_shim_state "$cli_dir")" in
-    shimmed)   ok "desktop CLI $(basename "$cli_dir") is shimmed" ;;
-    broken)    err "desktop CLI $(basename "$cli_dir") has our shim but no claude.real — it will not launch"
-               dim "run 'make disable-telemetry' then 'make enable-telemetry', or reinstall the app" ;;
-    unshimmed) stale="$stale $(basename "$cli_dir")" ;;
-  esac
-done < <(desktop_cli_dirs)
-if [ -n "$stale" ]; then
-  warn "desktop CLI${stale} not shimmed — those sessions carry no project label"
-  dim "the app installed a CLI update; 'make enable-telemetry' re-applies the shim"
-fi
 untagged="$(dc exec -T grafana curl -s --max-time 6 -G 'http://loki:3100/loki/api/v1/query' \
         --data-urlencode 'query=sum(count_over_time({service_name=~"claude-code.*"} | project="" [24h]))' 2>/dev/null \
         | jq -r '.data.result[0].value[1] // "0"')"
-[ "${untagged:-0}" = "0" ] && ok "every event in the last 24h carries a project" \
-  || warn "$untagged events in the last 24h have no project label"
+if [ "${untagged:-0}" = "0" ]; then
+  ok "every event in the last 24h carries a project"
+else
+  warn "$untagged events in the last 24h have no project label"
+  dim "expected if you use the desktop app: it execs its own CLI by absolute"
+  dim "path, so no PATH entry reaches it and its sessions are never tagged"
+fi
 
 step "Data arriving"
 recv="$(dc exec -T grafana curl -s --max-time 4 http://otelcol:8888/metrics 2>/dev/null \
