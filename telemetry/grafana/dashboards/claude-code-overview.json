@@ -355,9 +355,9 @@
       },
       "options": {
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
+          "values": true,
+          "calcs": [],
+          "fields": "/^Value.*$/"
         },
         "legend": {
           "displayMode": "table",
