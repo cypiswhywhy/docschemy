@@ -32,9 +32,9 @@
       "fieldConfig": { "defaults": { "unit": "ms", "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10, "showPoints": "never" } }, "overrides": [] },
       "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "desc" } },
       "targets": [
-        { "refId": "A", "expr": "quantile_over_time(0.5, {service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_request\" | unwrap duration_ms [$__auto])", "legendFormat": "p50" },
-        { "refId": "B", "expr": "quantile_over_time(0.95, {service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_request\" | unwrap duration_ms [$__auto])", "legendFormat": "p95" },
-        { "refId": "C", "expr": "max_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_request\" | unwrap duration_ms [$__auto])", "legendFormat": "max" }
+        { "refId": "A", "expr": "quantile_over_time(0.5, {service_name=~\"claude-code.*\", project=~\"$project\"} | event_name=\"api_request\" | unwrap duration_ms [$__auto]) by ()", "legendFormat": "p50" },
+        { "refId": "B", "expr": "quantile_over_time(0.95, {service_name=~\"claude-code.*\", project=~\"$project\"} | event_name=\"api_request\" | unwrap duration_ms [$__auto]) by ()", "legendFormat": "p95" },
+        { "refId": "C", "expr": "max_over_time({service_name=~\"claude-code.*\", project=~\"$project\"} | event_name=\"api_request\" | unwrap duration_ms [$__auto]) by ()", "legendFormat": "max" }
       ]
     },
     {
@@ -43,14 +43,14 @@
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 1 },
       "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "bars", "stacking": { "mode": "normal" }, "fillOpacity": 80, "lineWidth": 0 } }, "overrides": [] },
       "options": { "legend": { "displayMode": "table", "placement": "right", "calcs": ["sum"] } },
-      "targets": [{ "refId": "A", "expr": "sum by (model) (count_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_request\" [$__auto]))", "legendFormat": "{{model}}" }]
+      "targets": [{ "refId": "A", "expr": "sum by (model) (count_over_time({service_name=~\"claude-code.*\", project=~\"$project\"} | event_name=\"api_request\" [$__auto]))", "legendFormat": "{{model}}" }]
     },
     {
       "type": "table", "title": "Most expensive requests", "id": 3,
       "datasource": { "type": "loki", "uid": "claude-loki" },
       "gridPos": { "h": 9, "w": 24, "x": 0, "y": 9 },
       "options": { "showHeader": true, "sortBy": [{ "displayName": "cost_usd", "desc": true }] },
-      "targets": [{ "refId": "A", "expr": "{service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_request\" | line_format \"\"", "queryType": "range", "maxLines": 200 }],
+      "targets": [{ "refId": "A", "expr": "{service_name=~\"claude-code.*\", project=~\"$project\"} | event_name=\"api_request\" | line_format \"\"", "queryType": "range", "maxLines": 200 }],
       "transformations": [
         { "id": "extractFields", "options": { "source": "labels" } },
         { "id": "organize", "options": { "includeByName": {}, "excludeByName": { "labels": true, "Line": true, "id": true, "tsNs": true, "user_email": true, "user_id": true, "user_account_id": true, "user_account_uuid": true, "organization_id": true, "os_type": true, "os_version": true, "host_arch": true, "service_version": true, "scope_name": true, "scope_version": true, "observed_timestamp": true, "flags": true, "detected_level": true, "service_name": true }, "indexByName": { "Time": 0, "project": 1, "model": 2, "query_source": 3, "cost_usd": 4, "duration_ms": 5, "input_tokens": 6, "output_tokens": 7, "cache_read_tokens": 8, "cache_creation_tokens": 9 } } }
@@ -64,7 +64,7 @@
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 19 },
       "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "bars", "stacking": { "mode": "normal" }, "fillOpacity": 80, "lineWidth": 0 } }, "overrides": [] },
       "options": { "legend": { "displayMode": "table", "placement": "right", "calcs": ["sum"] } },
-      "targets": [{ "refId": "A", "expr": "sum by (tool_name) (count_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"tool_result\" [$__auto]))", "legendFormat": "{{tool_name}}" }]
+      "targets": [{ "refId": "A", "expr": "sum by (tool_name) (count_over_time({service_name=~\"claude-code.*\", project=~\"$project\"} | event_name=\"tool_result\" [$__auto]))", "legendFormat": "{{tool_name}}" }]
     },
     {
       "type": "timeseries", "title": "Tool duration p95, by tool", "id": 11,
@@ -72,7 +72,7 @@
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 19 },
       "fieldConfig": { "defaults": { "unit": "ms", "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 0, "showPoints": "never" } }, "overrides": [] },
       "options": { "legend": { "displayMode": "table", "placement": "right", "calcs": ["max"] } },
-      "targets": [{ "refId": "A", "expr": "quantile_over_time(0.95, {service_name=\"claude-code\", project=~\"$project\"} | event_name=\"tool_result\" | unwrap duration_ms [$__auto]) by (tool_name)", "legendFormat": "{{tool_name}}" }]
+      "targets": [{ "refId": "A", "expr": "quantile_over_time(0.95, {service_name=~\"claude-code.*\", project=~\"$project\"} | event_name=\"tool_result\" | unwrap duration_ms [$__auto]) by (tool_name)", "legendFormat": "{{tool_name}}" }]
     },
     {
       "type": "timeseries", "title": "Failed tool calls", "id": 12,
@@ -80,7 +80,7 @@
       "gridPos": { "h": 7, "w": 12, "x": 0, "y": 27 },
       "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "bars", "stacking": { "mode": "normal" }, "fillOpacity": 80, "lineWidth": 0 }, "color": { "mode": "fixed", "fixedColor": "red" } }, "overrides": [] },
       "options": { "legend": { "displayMode": "table", "placement": "right", "calcs": ["sum"] } },
-      "targets": [{ "refId": "A", "expr": "sum by (tool_name, error_type) (count_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"tool_result\" | success=\"false\" [$__auto]))", "legendFormat": "{{tool_name}} {{error_type}}" }]
+      "targets": [{ "refId": "A", "expr": "sum by (tool_name, error_type) (count_over_time({service_name=~\"claude-code.*\", project=~\"$project\"} | event_name=\"tool_result\" | success=\"false\" [$__auto]))", "legendFormat": "{{tool_name}} {{error_type}}" }]
     },
     {
       "type": "timeseries", "title": "Permission decisions", "id": 13,
@@ -89,7 +89,7 @@
       "gridPos": { "h": 7, "w": 12, "x": 12, "y": 27 },
       "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "bars", "stacking": { "mode": "normal" }, "fillOpacity": 80, "lineWidth": 0 } }, "overrides": [] },
       "options": { "legend": { "displayMode": "table", "placement": "right", "calcs": ["sum"] } },
-      "targets": [{ "refId": "A", "expr": "sum by (decision, source) (count_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"tool_decision\" [$__auto]))", "legendFormat": "{{decision}} via {{source}}" }]
+      "targets": [{ "refId": "A", "expr": "sum by (decision, source) (count_over_time({service_name=~\"claude-code.*\", project=~\"$project\"} | event_name=\"tool_decision\" [$__auto]))", "legendFormat": "{{decision}} via {{source}}" }]
     },
 
     { "type": "row", "title": "Failures", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 34 }, "collapsed": false },
@@ -100,8 +100,8 @@
       "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "bars", "stacking": { "mode": "normal" }, "fillOpacity": 80, "lineWidth": 0 } }, "overrides": [] },
       "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
       "targets": [
-        { "refId": "A", "expr": "sum by (status_code) (count_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_error\" [$__auto]))", "legendFormat": "error {{status_code}}" },
-        { "refId": "B", "expr": "sum(count_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_refusal\" [$__auto]))", "legendFormat": "refusal" }
+        { "refId": "A", "expr": "sum by (status_code) (count_over_time({service_name=~\"claude-code.*\", project=~\"$project\"} | event_name=\"api_error\" [$__auto]))", "legendFormat": "error {{status_code}}" },
+        { "refId": "B", "expr": "sum(count_over_time({service_name=~\"claude-code.*\", project=~\"$project\"} | event_name=\"api_refusal\" [$__auto]))", "legendFormat": "refusal" }
       ]
     },
     {
@@ -109,7 +109,7 @@
       "datasource": { "type": "loki", "uid": "claude-loki" },
       "gridPos": { "h": 7, "w": 16, "x": 8, "y": 35 },
       "options": { "showTime": true, "wrapLogMessage": true, "sortOrder": "Descending", "enableLogDetails": true },
-      "targets": [{ "refId": "A", "expr": "{service_name=\"claude-code\", project=~\"$project\"} | event_name=~\"api_error|api_refusal|internal_error\"", "maxLines": 200 }]
+      "targets": [{ "refId": "A", "expr": "{service_name=~\"claude-code.*\", project=~\"$project\"} | event_name=~\"api_error|api_refusal|internal_error\"", "maxLines": 200 }]
     },
     {
       "type": "timeseries", "title": "MCP server connections", "id": 22,
@@ -117,7 +117,7 @@
       "gridPos": { "h": 7, "w": 24, "x": 0, "y": 42 },
       "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "bars", "stacking": { "mode": "normal" }, "fillOpacity": 80, "lineWidth": 0 } }, "overrides": [] },
       "options": { "legend": { "displayMode": "table", "placement": "right", "calcs": ["sum"] } },
-      "targets": [{ "refId": "A", "expr": "sum by (server_name, status) (count_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"mcp_server_connection\" [$__auto]))", "legendFormat": "{{server_name}} {{status}}" }]
+      "targets": [{ "refId": "A", "expr": "sum by (server_name, status) (count_over_time({service_name=~\"claude-code.*\", project=~\"$project\"} | event_name=\"mcp_server_connection\" [$__auto]))", "legendFormat": "{{server_name}} {{status}}" }]
     },
 
     { "type": "row", "title": "Prompts and traces", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 49 }, "collapsed": false },
@@ -127,7 +127,7 @@
       "datasource": { "type": "loki", "uid": "claude-loki" },
       "gridPos": { "h": 10, "w": 12, "x": 0, "y": 50 },
       "options": { "showTime": true, "wrapLogMessage": true, "sortOrder": "Descending", "enableLogDetails": true },
-      "targets": [{ "refId": "A", "expr": "{service_name=\"claude-code\", project=~\"$project\"} | event_name=\"user_prompt\"", "maxLines": 200 }]
+      "targets": [{ "refId": "A", "expr": "{service_name=~\"claude-code.*\", project=~\"$project\"} | event_name=\"user_prompt\"", "maxLines": 200 }]
     },
     {
       "type": "table", "title": "Recent traces", "id": 31,
@@ -135,7 +135,7 @@
       "datasource": { "type": "tempo", "uid": "claude-tempo" },
       "gridPos": { "h": 10, "w": 12, "x": 12, "y": 50 },
       "options": { "showHeader": true },
-      "targets": [{ "refId": "A", "queryType": "traceql", "query": "{resource.service.name=\"claude-code\"}", "limit": 50, "tableType": "traces" }]
+      "targets": [{ "refId": "A", "queryType": "traceql", "query": "{resource.service.name=~\"claude-code.*\"}", "limit": 50, "tableType": "traces" }]
     }
   ]
 }

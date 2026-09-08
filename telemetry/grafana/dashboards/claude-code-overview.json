@@ -91,7 +91,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(sum_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_request\" | unwrap cost_usd [$__range]))",
+          "expr": "sum(sum_over_time({service_name=~\"claude-code.*\", project=~\"$project\"} | event_name=\"api_request\" | unwrap cost_usd [$__range]))",
           "queryType": "instant"
         }
       ],
@@ -135,7 +135,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(sum_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_request\" | label_format tot=`{{ add .input_tokens .output_tokens .cache_read_tokens .cache_creation_tokens }}` | unwrap tot [$__range]))",
+          "expr": "sum(sum_over_time({service_name=~\"claude-code.*\", project=~\"$project\"} | event_name=\"api_request\" | label_format tot=`{{ add .input_tokens .output_tokens .cache_read_tokens .cache_creation_tokens }}` | unwrap tot [$__range]))",
           "queryType": "instant"
         }
       ]
@@ -178,7 +178,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(count_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_request\" [$__range]))",
+          "expr": "sum(count_over_time({service_name=~\"claude-code.*\", project=~\"$project\"} | event_name=\"api_request\" [$__range]))",
           "queryType": "instant"
         }
       ]
@@ -221,7 +221,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(sum_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_request\" | unwrap cost_usd [$__range])) / sum(count_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_request\" [$__range]))",
+          "expr": "sum(sum_over_time({service_name=~\"claude-code.*\", project=~\"$project\"} | event_name=\"api_request\" | unwrap cost_usd [$__range])) / sum(count_over_time({service_name=~\"claude-code.*\", project=~\"$project\"} | event_name=\"api_request\" [$__range]))",
           "queryType": "instant"
         }
       ]
@@ -264,7 +264,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(sum_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_request\" | unwrap cache_read_tokens [$__range])) / sum(sum_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_request\" | label_format tot=`{{ add .input_tokens .output_tokens .cache_read_tokens .cache_creation_tokens }}` | unwrap tot [$__range]))",
+          "expr": "sum(sum_over_time({service_name=~\"claude-code.*\", project=~\"$project\"} | event_name=\"api_request\" | unwrap cache_read_tokens [$__range])) / sum(sum_over_time({service_name=~\"claude-code.*\", project=~\"$project\"} | event_name=\"api_request\" | label_format tot=`{{ add .input_tokens .output_tokens .cache_read_tokens .cache_creation_tokens }}` | unwrap tot [$__range]))",
           "queryType": "instant"
         }
       ],
@@ -326,7 +326,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (model) (sum_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_request\" | unwrap cost_usd [$__auto]))",
+          "expr": "sum by (model) (sum_over_time({service_name=~\"claude-code.*\", project=~\"$project\"} | event_name=\"api_request\" | unwrap cost_usd [$__auto]))",
           "queryType": "range",
           "legendFormat": "{{model}}"
         }
@@ -371,7 +371,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (project) (sum_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_request\" | unwrap cost_usd [$__range]))",
+          "expr": "sum by (project) (sum_over_time({service_name=~\"claude-code.*\", project=~\"$project\"} | event_name=\"api_request\" | unwrap cost_usd [$__range]))",
           "queryType": "instant",
           "legendFormat": "{{project}}"
         }
@@ -423,7 +423,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (query_source) (sum_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_request\" | unwrap cost_usd [$__auto]))",
+          "expr": "sum by (query_source) (sum_over_time({service_name=~\"claude-code.*\", project=~\"$project\"} | event_name=\"api_request\" | unwrap cost_usd [$__auto]))",
           "queryType": "range",
           "legendFormat": "{{query_source}}"
         }
@@ -475,25 +475,25 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(sum_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_request\" | unwrap input_tokens [$__auto]))",
+          "expr": "sum(sum_over_time({service_name=~\"claude-code.*\", project=~\"$project\"} | event_name=\"api_request\" | unwrap input_tokens [$__auto]))",
           "queryType": "range",
           "legendFormat": "input"
         },
         {
           "refId": "B",
-          "expr": "sum(sum_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_request\" | unwrap output_tokens [$__auto]))",
+          "expr": "sum(sum_over_time({service_name=~\"claude-code.*\", project=~\"$project\"} | event_name=\"api_request\" | unwrap output_tokens [$__auto]))",
           "queryType": "range",
           "legendFormat": "output"
         },
         {
           "refId": "C",
-          "expr": "sum(sum_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_request\" | unwrap cache_read_tokens [$__auto]))",
+          "expr": "sum(sum_over_time({service_name=~\"claude-code.*\", project=~\"$project\"} | event_name=\"api_request\" | unwrap cache_read_tokens [$__auto]))",
           "queryType": "range",
           "legendFormat": "cacheRead"
         },
         {
           "refId": "D",
-          "expr": "sum(sum_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_request\" | unwrap cache_creation_tokens [$__auto]))",
+          "expr": "sum(sum_over_time({service_name=~\"claude-code.*\", project=~\"$project\"} | event_name=\"api_request\" | unwrap cache_creation_tokens [$__auto]))",
           "queryType": "range",
           "legendFormat": "cacheCreation"
         }
