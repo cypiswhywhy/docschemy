@@ -106,9 +106,9 @@ All three are the same mechanism — get the shim onto `PATH` ahead of the real
 binary — which is why the desktop app is not among them. It `exec`s a Claude
 Code build it downloads itself, at
 `~/.config/Claude/claude-code/<version>/claude`, and never resolves the name
-through `PATH`, so its sessions arrive with no project label. See
-[ADR 0011](../internals/adrs/0011-leave-desktop-app-sessions-untagged.md) for
-why nothing is installed there.
+through `PATH`, so its sessions arrive with no project label —
+[Why desktop app sessions have no project label](../internals/telemetry-desktop-sessions.md)
+covers what was tried and why nothing is installed there.
 
 It sets a different key from anything in `settings.json`, so the two never
 compete: shared transport settings come from the settings file, per-session

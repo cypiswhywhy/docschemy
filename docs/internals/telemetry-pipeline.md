@@ -71,43 +71,19 @@ Only `service_name` and `project` are stream labels; everything else is
 structured metadata. That keeps the number of streams tiny — one per project —
 while leaving every field filterable.
 
-## One CLI, three launchers
+## Two launchers, two service names
 
-The same Claude Code binary is started in ways that differ enough to change what
-reaches the pipeline. Two of them resolve `claude` through `PATH`, so a shim
-placed earlier on `PATH` catches them ([ADR 0009](adrs/0009-tag-projects-with-a-path-shim.md)).
-The desktop app does not: it `exec`s a build it downloads and version-pins
-itself, by absolute path, and injects its own OTel environment at spawn.
+The desktop app spawns its CLI with `OTEL_SERVICE_NAME=claude-code-desktop`,
+where every other launcher reports `claude-code`. A query pinned to
+`service_name="claude-code"` therefore returns nothing for desktop sessions,
+however much they produced — silently, since a stream selector that matches no
+stream is not an error. Everything that reads events matches
+`service_name=~"claude-code.*"` instead, which keeps the two distinguishable
+rather than flattening them into one name.
 
-```mermaid
-flowchart LR
-    T["terminal"] -->|"PATH, via ~/.zshrc"| S["claude-shim<br/>appends project=&lt;git root&gt;"]
-    I["IDE extension,<br/>systemd user unit"] -->|"PATH, via environment.d"| S
-    S --> CC["claude<br/>service_name=claude-code"]
-    D["desktop app"] -->|"absolute path to its own<br/>pinned CLI build, no shim"| DC["claude<br/>service_name=claude-code-desktop<br/>no project label"]
-    CC --> OC["otelcol"]
-    DC --> OC
-```
-
-That injection has two consequences the rest of the stack has to absorb.
-
-The first is the name. The app sets `OTEL_SERVICE_NAME=claude-code-desktop`, so
-its sessions do not answer to `service_name="claude-code"` — a query pinned to
-that string silently returns nothing for them, however much they produced.
-Everything that reads events matches `service_name=~"claude-code.*"` instead,
-which keeps the two launchers distinguishable rather than flattening them.
-
-The second is that the project label has nowhere to come from. The app also
-injects `OTEL_RESOURCE_ATTRIBUTES`, and Claude Code does not let a `settings.json`
-`env` entry override a variable the process already has, so per-project settings
-cannot supply it. Deriving it in the collector needs a path on the events, and no
-event type carries a working directory, a workspace or a session id to join on.
-The one place it could be derived is the path the app `exec`s — it spawns with
-the session's project as the working directory — but reaching it means replacing
-a file the app installs and manages.
-[ADR 0011](adrs/0011-leave-desktop-app-sessions-untagged.md) records the choice
-not to. Desktop sessions are complete in every other respect; they group under
-an empty project label.
+The same spawn is why those sessions carry no `project` label:
+[Why desktop app sessions have no project label](telemetry-desktop-sessions.md)
+covers that, and what was tried.
 
 ## Failure modes worth knowing
 

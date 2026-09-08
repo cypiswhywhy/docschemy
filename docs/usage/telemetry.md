@@ -62,7 +62,8 @@ How a session reaches the shim depends on how it was launched:
   `~/.config/environment.d/`, which is read at login. Log out and back in once.
 - **The desktop app** — not covered. It never consults `PATH`: it runs a copy of
   Claude Code it downloads itself, by absolute path. Its sessions are recorded in
-  full, but always under an empty project label.
+  full, but always under an empty project label —
+  [why that is](../internals/telemetry-desktop-sessions.md).
 
 Until the `PATH` entries are picked up, terminal and IDE launches behave the
 same way — everything else is recorded, grouped under an empty label.
