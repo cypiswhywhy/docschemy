@@ -28,7 +28,11 @@ See [Usage](docs/usage/README.md) for running all four skills and choosing betwe
 make enable-telemetry
 ```
 
-Brings up a local Grafana on <http://localhost:3000> showing spend, latency, tool failures and traces for every Claude Code session on the machine. Everything runs in Docker on loopback — see [Collect telemetry from your Claude Code sessions](docs/usage/telemetry.md).
+Brings up a local Grafana on <http://localhost:3000> showing spend, latency, tool failures and traces for every Claude Code session on the machine, broken down by project without any per-project setup. Everything runs in Docker on loopback.
+
+![Grafana Overview dashboard for Claude Code. Five stat panels read Spend $51.98, Tokens 71.2 million, API requests 441, Spend per request $0.1179 and Cache read share 98.3%. Below, spend over time splits by model, and a donut splits the same total across four projects: toolchemy $49.12, genealogy $2.07, docschemy $0.42 and printer $0.37.](docs/assets/telemetry-overview-spend.png)
+
+Setting it up: [Collect telemetry from your Claude Code sessions](docs/usage/telemetry.md). A tour of every panel: [Read the telemetry dashboards](docs/usage/telemetry-dashboards.md).
 
 ## Reference
 
