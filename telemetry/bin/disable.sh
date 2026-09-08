@@ -52,6 +52,20 @@ else
   ok "no claude shim to remove"
 fi
 
+restored=0
+while IFS= read -r cli_dir; do
+  if desktop_shim_remove "$cli_dir"; then
+    restored=$((restored + 1))
+  elif [ "$(desktop_shim_state "$cli_dir")" = "broken" ]; then
+    err "$cli_dir/claude is our shim but claude.real is gone — reinstall the desktop app"
+  fi
+done < <(desktop_cli_dirs)
+if [ "$restored" -gt 0 ]; then
+  ok "restored $restored desktop CLI $([ "$restored" = 1 ] && echo binary || echo binaries)"
+else
+  ok "no shimmed desktop CLI to restore"
+fi
+
 if [ -f "$ENV_D_FILE" ]; then
   rm -f "$ENV_D_FILE"
   ok "removed $(basename "$ENV_D_FILE")"

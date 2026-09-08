@@ -44,9 +44,26 @@ else
   warn "$SHIM_DIR not added to PATH by $(basename "$ZSHRC")"
 fi
 if [ -f "$ENV_D_FILE" ]; then
-  ok "shim on PATH for the desktop app and IDEs (via environment.d)"
+  ok "shim on PATH for IDEs and other non-terminal launches (via environment.d)"
 else
   warn "no environment.d entry — only terminal sessions get tagged"
+fi
+
+# The desktop app ignores PATH entirely and execs its own downloaded CLI. Each
+# update lands in a new, unshimmed directory and tagging stops without a word,
+# so this is the check that has to be loud.
+stale=""
+while IFS= read -r cli_dir; do
+  case "$(desktop_shim_state "$cli_dir")" in
+    shimmed)   ok "desktop CLI $(basename "$cli_dir") is shimmed" ;;
+    broken)    err "desktop CLI $(basename "$cli_dir") has our shim but no claude.real — it will not launch"
+               dim "run 'make disable-telemetry' then 'make enable-telemetry', or reinstall the app" ;;
+    unshimmed) stale="$stale $(basename "$cli_dir")" ;;
+  esac
+done < <(desktop_cli_dirs)
+if [ -n "$stale" ]; then
+  warn "desktop CLI${stale} not shimmed — those sessions carry no project label"
+  dim "the app installed a CLI update; 'make enable-telemetry' re-applies the shim"
 fi
 untagged="$(dc exec -T grafana curl -s --max-time 6 -G 'http://loki:3100/loki/api/v1/query' \
         --data-urlencode 'query=sum(count_over_time({service_name=~"claude-code.*"} | project="" [24h]))' 2>/dev/null \

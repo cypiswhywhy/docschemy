@@ -123,6 +123,26 @@ if [ "$INSTALL_WRAPPER" = "1" ]; then
     warn "no $ZSHRC found — add $SHIM_DIR to PATH by hand"
   fi
 
+  # The desktop app is not covered by either PATH mechanism: it execs a CLI it
+  # downloads itself, by absolute path. Shim that path directly, keeping the
+  # real binary beside the shim as claude.real.
+  shimmed=0 failed=0
+  while IFS= read -r cli_dir; do
+    if desktop_shim_apply "$cli_dir"; then
+      shimmed=$((shimmed + 1))
+    else
+      failed=$((failed + 1))
+      err "could not shim $cli_dir"
+    fi
+  done < <(desktop_cli_dirs)
+  if [ "$shimmed" -gt 0 ]; then
+    ok "shimmed $shimmed desktop CLI $([ "$shimmed" = 1 ] && echo version || echo versions)"
+    dim "the app installs each CLI update into a new directory, which arrives"
+    dim "unshimmed -- 'make telemetry-status' reports that, re-run this to fix"
+  elif [ "$failed" = 0 ]; then
+    dim "no desktop app CLI found in $DESKTOP_CLI_ROOT — nothing to shim"
+  fi
+
   # Everything that is not a terminal: the desktop app, IDE extensions and
   # systemd user units never read a shell rc, so they need the graphical
   # session's own PATH. Read at login, hence the restart note.
