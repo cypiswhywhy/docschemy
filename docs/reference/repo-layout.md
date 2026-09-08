@@ -18,7 +18,7 @@ docschemy/
     ├── usage/            # installing and running the skills
     ├── reference/        # these pages
     ├── internals/        # architecture, convention, adrs/
-    └── assets/           # figures (currently empty — all diagrams are inline Mermaid)
+    └── assets/           # figures — dashboard screenshots; diagrams stay inline as Mermaid
 ```
 
 `skills/` is the payload the repo exists to publish — no application source, no build output, no generated files. Every directory directly under `skills/` is treated as a skill by [`make install`](make-targets.md); nothing else in the repo is, `telemetry/` included.

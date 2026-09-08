@@ -41,16 +41,11 @@ expecting data. New sessions are collected automatically.
 ## Look at the data
 
 Open <http://localhost:3000> — no login — and pick the **Claude Code** folder.
+It holds two dashboards: **Overview** for spend, and **Deep Dive** for latency,
+tools and failures.
 
-| Dashboard | Answers |
-|---|---|
-| Overview | What did I spend, on which model, on which project, and what came back for it |
-| Deep Dive | Which requests were slow, which tools failed, which permission prompts you answered, and the traces behind them |
-
-Spend and token figures on Overview are summed from per-request events and are
-exact. Session, commit and line counts come from metrics and are marked `≈` —
-[the pipeline page](../internals/telemetry-pipeline.md#two-stores-two-kinds-of-answer)
-explains why the two differ.
+[Read the telemetry dashboards](telemetry-dashboards.md) walks through every
+panel on both, with screenshots.
 
 ## Per-project breakdowns
 
