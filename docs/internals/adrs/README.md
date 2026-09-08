@@ -17,7 +17,8 @@ ADRs are append-only. Once accepted, a record is never edited and never deleted 
 | [0007](0007-local-otel-stack-for-telemetry.md) | Collect Claude Code telemetry through a local OpenTelemetry stack | Accepted | 2026-08-19 |
 | [0008](0008-read-spend-from-events-not-counters.md) | Read spend from events, not from Prometheus counters | Accepted | 2026-08-19 |
 | [0009](0009-tag-projects-with-a-path-shim.md) | Derive the project label with a PATH shim, not a shell function | Accepted | 2026-09-08 |
-| [0010](0010-shim-the-desktop-apps-bundled-cli.md) | Shim the desktop app's own CLI, and match both service names | Accepted | 2026-09-08 |
+| [0010](0010-shim-the-desktop-apps-bundled-cli.md) | Shim the desktop app's own CLI, and match both service names | Superseded by [0011](0011-leave-desktop-app-sessions-untagged.md) | 2026-09-08 |
+| [0011](0011-leave-desktop-app-sessions-untagged.md) | Leave desktop app sessions untagged rather than replace a file the app manages | Accepted | 2026-09-08 |
 
 The first four were reconstructed from the commits and rationale that already existed in the repo, so their dates are the dates of the decisions, not of the records.
 

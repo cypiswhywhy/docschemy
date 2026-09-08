@@ -81,12 +81,12 @@ itself, by absolute path, and injects its own OTel environment at spawn.
 
 ```mermaid
 flowchart LR
-    T["terminal"] -->|"PATH, via ~/.zshrc"| S
+    T["terminal"] -->|"PATH, via ~/.zshrc"| S["claude-shim<br/>appends project=&lt;git root&gt;"]
     I["IDE extension,<br/>systemd user unit"] -->|"PATH, via environment.d"| S
-    D["desktop app"] -->|"absolute path to its<br/>own pinned CLI build"| W["generated wrapper in the<br/>version directory"]
-    W --> S["claude-shim<br/>appends project=&lt;git root&gt;"]
-    S --> CC["claude"]
-    CC -->|"service_name=claude-code<br/>or claude-code-desktop"| OC["otelcol"]
+    S --> CC["claude<br/>service_name=claude-code"]
+    D["desktop app"] -->|"absolute path to its own<br/>pinned CLI build, no shim"| DC["claude<br/>service_name=claude-code-desktop<br/>no project label"]
+    CC --> OC["otelcol"]
+    DC --> OC
 ```
 
 That injection has two consequences the rest of the stack has to absorb.
@@ -97,15 +97,17 @@ that string silently returns nothing for them, however much they produced.
 Everything that reads events matches `service_name=~"claude-code.*"` instead,
 which keeps the two launchers distinguishable rather than flattening them.
 
-The second is that the project label had nowhere else to come from. The app also
+The second is that the project label has nowhere to come from. The app also
 injects `OTEL_RESOURCE_ATTRIBUTES`, and Claude Code does not let a `settings.json`
 `env` entry override a variable the process already has, so per-project settings
 cannot supply it. Deriving it in the collector needs a path on the events, and no
 event type carries a working directory, a workspace or a session id to join on.
-What does hold is that the app spawns its CLI with the session's project as the
-working directory — the same thing the `PATH` shim reads — so a wrapper at that
-path derives the same name. [ADR 0010](adrs/0010-shim-the-desktop-apps-bundled-cli.md)
-records the choice and what it costs.
+The one place it could be derived is the path the app `exec`s — it spawns with
+the session's project as the working directory — but reaching it means replacing
+a file the app installs and manages.
+[ADR 0011](adrs/0011-leave-desktop-app-sessions-untagged.md) records the choice
+not to. Desktop sessions are complete in every other respect; they group under
+an empty project label.
 
 ## Failure modes worth knowing
 
@@ -124,12 +126,6 @@ points — enough to raise an alarm about a threshold that is not actually close
 are not part of the Compose config hash, so editing `otelcol/config.yaml` or
 `loki/loki.yaml` needs an explicit `docker compose restart <service>`; `up -d`
 alone will report the container as already up to date.
-
-**A desktop app CLI update silently drops project tagging.** The app installs
-each update into a new version directory, which arrives without the wrapper.
-Sessions keep recording; they just group under an empty project label again.
-Nothing in the install can prevent that, so `make telemetry-status` inspects
-every version directory it finds and names any that is unshimmed.
 
 **Running sessions never pick telemetry up.** It is read once at startup. Every
 enable and disable path says so, because it is the one part of the flow no

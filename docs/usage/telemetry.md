@@ -60,24 +60,14 @@ How a session reaches the shim depends on how it was launched:
   `~/.zshrc`. Run `exec zsh` once to pick it up.
 - **IDE extensions, scheduled jobs** — the same `PATH` entry, through
   `~/.config/environment.d/`, which is read at login. Log out and back in once.
-- **The desktop app** — it never consults `PATH`, so neither entry reaches it.
-  It runs a copy of Claude Code it downloads itself, and the installer puts a
-  wrapper at that path directly. Nothing for you to do at install time.
+- **The desktop app** — not covered. It never consults `PATH`: it runs a copy of
+  Claude Code it downloads itself, by absolute path. Its sessions are recorded in
+  full, but always under an empty project label.
 
-**Re-run `make enable-telemetry` after the desktop app updates Claude Code.**
-Each update installs into a new directory, which arrives without the wrapper,
-and tagging stops with no error anywhere. `make telemetry-status` is what
-surfaces it:
-
-```
-  ! desktop CLI 2.1.263 not shimmed — those sessions carry no project label
-    the app installed a CLI update; 'make enable-telemetry' re-applies the shim
-```
-
-Until every launcher you use is covered, the ones that are not still record
-everything else; they just group under an empty project label.
+Until the `PATH` entries are picked up, terminal and IDE launches behave the
+same way — everything else is recorded, grouped under an empty label.
 `make telemetry-status` reports how many events in the last 24 hours arrived
-untagged.
+untagged; with the desktop app in use that count is never zero.
 
 To override the name for one session — a worktree that should report as its
 parent repo, say — set it yourself and the shim leaves it alone:

@@ -89,44 +89,28 @@ directory skipped. `CLAUDE_REAL_BIN` overrides that search. A `project=` the
 caller already set is left alone, so a per-session override still wins; an
 `OTEL_RESOURCE_ATTRIBUTES` set by the launcher is appended to, not replaced.
 
-`make enable-telemetry` installs it in four places; `make disable-telemetry`
-removes all four.
+`make enable-telemetry` installs it in three places; `make disable-telemetry`
+removes all three.
 
 | What | Path | Covers |
 |---|---|---|
 | The shim | `~/.claude/shims/claude` → this repo | — |
 | `PATH` for terminals | a marked block in `~/.zshrc` | sessions started from a shell |
 | `PATH` for everything else | `~/.config/environment.d/10-docschemy-claude-telemetry.conf` | IDE extensions, systemd user units |
-| The desktop app's own CLI | `~/.config/Claude/claude-code/<version>/claude` | the desktop app |
 
-The first three are one mechanism: the shim is symlinked rather than copied, so
-editing it here takes effect on the next launch, and the two `PATH` entries just
-put it ahead of the real binary. The `environment.d` file is read at login, so
-those sessions pick it up only after a re-login.
+The shim is symlinked rather than copied, so editing it here takes effect on the
+next launch. The `environment.d` file is read at login, so graphical sessions
+pick it up only after a re-login.
 
-The fourth is separate, because the desktop app never consults `PATH` — it
-`exec`s a Claude Code build it downloads itself, by absolute path. There,
-`make enable-telemetry` moves the real binary to `claude.real` in the same
-directory and writes a generated wrapper in its place, marked with
-`# docschemy-claude-telemetry desktop shim` on its second line. The wrapper
-names `claude.real` through `CLAUDE_REAL_BIN` and hands off to the shared shim.
+All three are the same mechanism — get the shim onto `PATH` ahead of the real
+binary — which is why the desktop app is not among them. It `exec`s a Claude
+Code build it downloads itself, at
+`~/.config/Claude/claude-code/<version>/claude`, and never resolves the name
+through `PATH`, so its sessions arrive with no project label. See
+[ADR 0011](../internals/adrs/0011-leave-desktop-app-sessions-untagged.md) for
+why nothing is installed there.
 
-Two properties of that install are deliberate:
-
-- **It is a copy, not a symlink.** An app update writing its new binary to that
-  path would follow a symlink and overwrite `telemetry/shell/claude-shim` in
-  this repo, breaking tagging for every launcher at once.
-- **It names `claude.real` explicitly.** A `PATH` scan from there would find the
-  terminal's separately-updated Claude Code, which is generally a different
-  version than the app expects to speak to.
-
-The app installs each CLI update into a *new* version directory, which arrives
-without the wrapper. `make telemetry-status` reports the state of every version
-directory it finds — `shimmed`, not shimmed (a warning naming the version), or a
-wrapper whose `claude.real` is missing (an error; that directory will not
-launch) — and `make enable-telemetry` re-applies it.
-
-The shim sets a different key from anything in `settings.json`, so the two never
+It sets a different key from anything in `settings.json`, so the two never
 compete: shared transport settings come from the settings file, per-session
 identity from the environment.
 

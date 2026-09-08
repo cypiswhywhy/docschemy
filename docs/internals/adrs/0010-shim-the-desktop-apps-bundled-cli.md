@@ -1,6 +1,6 @@
 # 0010. Shim the desktop app's own CLI, and match both service names
 
-- **Status**: Accepted
+- **Status**: Superseded by [0011](0011-leave-desktop-app-sessions-untagged.md)
 - **Date**: 2026-09-08
 
 ## Context
