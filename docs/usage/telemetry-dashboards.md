@@ -47,8 +47,8 @@ appears in the list only once you have used Claude Code in it — and only withi
 the dashboard's current time range. An empty dropdown almost always means the
 range is shorter than the gap since you last worked.
 
-Sessions that reach the collector untagged group under an empty label rather
-than disappearing. [Per-project breakdowns](telemetry.md#per-project-breakdowns)
+Sessions that reach the collector untagged group under a single slice named
+`untagged` rather than disappearing. [Per-project breakdowns](telemetry.md#per-project-breakdowns)
 covers how the tagging works and what to do about the untagged ones.
 
 ![A donut chart titled Spend by project, with a legend table listing toolchemy $49.12, genealogy $2.07, docschemy $0.42 and printer $0.37.](../assets/telemetry-spend-by-project.png)

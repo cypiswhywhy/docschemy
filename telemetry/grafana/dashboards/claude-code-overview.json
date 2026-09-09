@@ -371,12 +371,12 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (project) (sum_over_time({service_name=~\"claude-code.*\", project=~\"$project\"} | event_name=\"api_request\" | unwrap cost_usd [$__range]))",
+          "expr": "sum by (project) (sum_over_time({service_name=~\"claude-code.*\", project=~\"$project\"} | event_name=\"api_request\" | label_format project=`{{ if .project }}{{ .project }}{{ else }}untagged{{ end }}` | unwrap cost_usd [$__range]))",
           "queryType": "instant",
           "legendFormat": "{{project}}"
         }
       ],
-      "description": "Requires OTEL_RESOURCE_ATTRIBUTES=project=<name>; sessions without it group under an empty label."
+      "description": "The project label comes from the tagging shim (OTEL_RESOURCE_ATTRIBUTES=project=<name>). Sessions without one group under \"untagged\" \u2014 desktop app sessions do unless the variable was set in the app for that session."
     },
     {
       "type": "timeseries",

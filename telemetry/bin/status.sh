@@ -55,8 +55,8 @@ if [ "${untagged:-0}" = "0" ]; then
   ok "every event in the last 24h carries a project"
 else
   warn "$untagged events in the last 24h have no project label"
-  dim "expected if you use the desktop app: it execs its own CLI by absolute"
-  dim "path, so no PATH entry reaches it and its sessions are never tagged"
+  dim "expected for desktop app sessions started without the label: no PATH"
+  dim "entry reaches the app's own CLI. See docs/usage/telemetry.md to set it"
 fi
 
 step "Data arriving"

@@ -81,8 +81,9 @@ stream is not an error. Everything that reads events matches
 `service_name=~"claude-code.*"` instead, which keeps the two distinguishable
 rather than flattening them into one name.
 
-The same spawn is why those sessions carry no `project` label:
-[Why desktop app sessions have no project label](telemetry-desktop-sessions.md)
+The same spawn is why the tagging shim never sees those sessions, and why their
+`project` label is set in the app instead:
+[How desktop app sessions get a project label](telemetry-desktop-sessions.md)
 covers that, and what was tried.
 
 ## Failure modes worth knowing
