@@ -1,6 +1,6 @@
 # 0011. Leave desktop app sessions untagged rather than replace a file the app manages
 
-- **Status**: Accepted
+- **Status**: Superseded by [0012](0012-tag-desktop-sessions-through-the-apps-env-vars.md)
 - **Date**: 2026-09-08
 
 ## Context

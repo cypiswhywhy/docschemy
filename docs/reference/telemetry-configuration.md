@@ -104,11 +104,15 @@ pick it up only after a re-login.
 
 All three are the same mechanism — get the shim onto `PATH` ahead of the real
 binary — which is why the desktop app is not among them. It `exec`s a Claude
-Code build it downloads itself, at
-`~/.config/Claude/claude-code/<version>/claude`, and never resolves the name
-through `PATH`, so its sessions arrive with no project label —
-[Why desktop app sessions have no project label](../internals/telemetry-desktop-sessions.md)
-covers what was tried and why nothing is installed there.
+Code build it downloads itself (under
+`~/Library/Application Support/Claude/claude-code/<version>/` on macOS,
+`~/.config/Claude/claude-code/<version>/` on Linux) and never resolves the name
+through `PATH`. Its sessions are tagged by setting the same variable,
+`OTEL_RESOURCE_ATTRIBUTES=project=<repo>`, in the environment variables the app
+provides for a session — the how-to is in
+[Collect telemetry](../usage/telemetry.md#tag-a-desktop-app-session), and
+[How desktop app sessions get a project label](../internals/telemetry-desktop-sessions.md)
+covers why nothing is installed there.
 
 It sets a different key from anything in `settings.json`, so the two never
 compete: shared transport settings come from the settings file, per-session

@@ -22,7 +22,7 @@ make telemetry-status     # is it actually collecting?
 make disable-telemetry    # stop it, keep the data (purge-telemetry drops the data too)
 ```
 
-The telemetry stack under `telemetry/` is optional and self-contained — nothing in `skills/` reads it. It runs five containers on loopback and keeps all data local. Docs: [usage](docs/usage/telemetry.md), [configuration](docs/reference/telemetry-configuration.md), [design](docs/internals/telemetry-pipeline.md), [why desktop sessions have no project label](docs/internals/telemetry-desktop-sessions.md).
+The telemetry stack under `telemetry/` is optional and self-contained — nothing in `skills/` reads it. It runs five containers on loopback and keeps all data local. Docs: [usage](docs/usage/telemetry.md), [configuration](docs/reference/telemetry-configuration.md), [design](docs/internals/telemetry-pipeline.md), [how desktop sessions get a project label](docs/internals/telemetry-desktop-sessions.md).
 
 There is no build, lint, or test step.
 

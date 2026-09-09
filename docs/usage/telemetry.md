@@ -49,9 +49,9 @@ panel on both, with screenshots.
 
 ## Per-project breakdowns
 
-Nothing to configure per project. `make enable-telemetry` installs a small
-`claude` shim that reads the git repository name of wherever you started and
-tags the session with it. That is what fills the **Project** dropdown and the
+For terminals and IDEs there is nothing to configure per project.
+`make enable-telemetry` installs a small `claude` shim that reads the git
+repository name of wherever you started and tags the session with it. That is what fills the **Project** dropdown and the
 spend-by-project panel.
 
 How a session reaches the shim depends on how it was launched:
@@ -60,15 +60,15 @@ How a session reaches the shim depends on how it was launched:
   `~/.zshrc`. Run `exec zsh` once to pick it up.
 - **IDE extensions, scheduled jobs** — the same `PATH` entry, through
   `~/.config/environment.d/`, which is read at login. Log out and back in once.
-- **The desktop app** — not covered. It never consults `PATH`: it runs a copy of
-  Claude Code it downloads itself, by absolute path. Its sessions are recorded in
-  full, but always under an empty project label —
-  [why that is](../internals/telemetry-desktop-sessions.md).
+- **The desktop app** — the shim cannot reach it. It runs a copy of Claude Code
+  it downloads itself, by absolute path, never consulting `PATH`. You set the
+  label yourself, per session, in the app — see
+  [Tag a desktop app session](#tag-a-desktop-app-session) below.
 
-Until the `PATH` entries are picked up, terminal and IDE launches behave the
-same way — everything else is recorded, grouped under an empty label.
+Until the `PATH` entries are picked up, terminal and IDE launches behave like an
+untagged desktop session — everything is recorded, grouped as `untagged`.
 `make telemetry-status` reports how many events in the last 24 hours arrived
-untagged; with the desktop app in use that count is never zero.
+untagged.
 
 To override the name for one session — a worktree that should report as its
 parent repo, say — set it yourself and the shim leaves it alone:
@@ -76,6 +76,23 @@ parent repo, say — set it yourself and the shim leaves it alone:
 ```sh
 OTEL_RESOURCE_ATTRIBUTES=project=my-repo claude
 ```
+
+### Tag a desktop app session
+
+Before starting a session in the desktop app, open its **Environment variables**
+and add one line, with the repository name you want it filed under:
+
+```
+OTEL_RESOURCE_ATTRIBUTES=project=my-repo
+```
+
+The app merges that into the attributes it sets on the session, and the session
+then appears in the **Project** dropdown and in spend-by-project like any
+terminal session of the same repository. Sessions started without it group under
+`untagged`. In the current app version the variable is set per session, not per
+folder. <!-- TODO: verify whether a later app version exposes per-folder environment variables -->
+[How desktop app sessions get a project label](../internals/telemetry-desktop-sessions.md)
+explains why the shim cannot do this for you.
 
 ## Check it is working
 
