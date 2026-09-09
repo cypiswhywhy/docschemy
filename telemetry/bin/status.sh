@@ -44,15 +44,20 @@ else
   warn "$SHIM_DIR not added to PATH by $(basename "$ZSHRC")"
 fi
 if [ -f "$ENV_D_FILE" ]; then
-  ok "shim on PATH for the desktop app and IDEs (via environment.d)"
+  ok "shim on PATH for IDEs and other non-terminal launches (via environment.d)"
 else
   warn "no environment.d entry — only terminal sessions get tagged"
 fi
 untagged="$(dc exec -T grafana curl -s --max-time 6 -G 'http://loki:3100/loki/api/v1/query' \
-        --data-urlencode 'query=sum(count_over_time({service_name="claude-code"} | project="" [24h]))' 2>/dev/null \
+        --data-urlencode 'query=sum(count_over_time({service_name=~"claude-code.*"} | project="" [24h]))' 2>/dev/null \
         | jq -r '.data.result[0].value[1] // "0"')"
-[ "${untagged:-0}" = "0" ] && ok "every event in the last 24h carries a project" \
-  || warn "$untagged events in the last 24h have no project label"
+if [ "${untagged:-0}" = "0" ]; then
+  ok "every event in the last 24h carries a project"
+else
+  warn "$untagged events in the last 24h have no project label"
+  dim "expected if you use the desktop app: it execs its own CLI by absolute"
+  dim "path, so no PATH entry reaches it and its sessions are never tagged"
+fi
 
 step "Data arriving"
 recv="$(dc exec -T grafana curl -s --max-time 4 http://otelcol:8888/metrics 2>/dev/null \
@@ -67,12 +72,12 @@ else
 fi
 
 last="$(dc exec -T grafana curl -s --max-time 6 -G 'http://loki:3100/loki/api/v1/query' \
-        --data-urlencode 'query=sum(count_over_time({service_name="claude-code"}[24h]))' 2>/dev/null \
+        --data-urlencode 'query=sum(count_over_time({service_name=~"claude-code.*"}[24h]))' 2>/dev/null \
         | jq -r '.data.result[0].value[1] // "0"')"
 [ "${last:-0}" != "0" ] && ok "$last events stored in the last 24h" || warn "no events stored in the last 24h"
 
 spend="$(dc exec -T grafana curl -s --max-time 6 -G 'http://loki:3100/loki/api/v1/query' \
-        --data-urlencode 'query=sum(sum_over_time({service_name="claude-code"} | event_name="api_request" | unwrap cost_usd [24h]))' 2>/dev/null \
+        --data-urlencode 'query=sum(sum_over_time({service_name=~"claude-code.*"} | event_name="api_request" | unwrap cost_usd [24h]))' 2>/dev/null \
         | jq -r '.data.result[0].value[1] // "0"')"
 printf '    %sspend, last 24h: $%s%s\n' "$C_DIM" "$(printf '%.4f' "${spend:-0}" 2>/dev/null || echo "$spend")" "$C_OFF"
 

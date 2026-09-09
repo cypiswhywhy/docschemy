@@ -28,7 +28,7 @@ flowchart TD
     B --> C["docker compose up"]
     C --> D["wait until all five<br/>containers answer as ready"]
     D --> E["merge the OTLP env block<br/>into ~/.claude/settings.json"]
-    E --> F["install the tagging shim<br/>and put it on PATH"]
+    E --> F["install the tagging shim<br/>for every launcher"]
     F --> G(["Grafana on :3000"])
 ```
 
@@ -50,20 +50,25 @@ panel on both, with screenshots.
 ## Per-project breakdowns
 
 Nothing to configure per project. `make enable-telemetry` installs a small
-`claude` shim ahead of the real binary on `PATH`; it reads the git repository
-name of wherever you started and tags the session with it. That is what fills
-the **Project** dropdown and the spend-by-project panel.
+`claude` shim that reads the git repository name of wherever you started and
+tags the session with it. That is what fills the **Project** dropdown and the
+spend-by-project panel.
 
-It is installed on `PATH` twice, because terminals and everything else get
-their environment from different places:
+How a session reaches the shim depends on how it was launched:
 
-- **Terminals** — via `~/.zshrc`. Run `exec zsh` once to pick it up.
-- **The desktop app, IDE extensions, scheduled jobs** — via
+- **Terminals** — the shim goes ahead of the real binary on `PATH`, through
+  `~/.zshrc`. Run `exec zsh` once to pick it up.
+- **IDE extensions, scheduled jobs** — the same `PATH` entry, through
   `~/.config/environment.d/`, which is read at login. Log out and back in once.
+- **The desktop app** — not covered. It never consults `PATH`: it runs a copy of
+  Claude Code it downloads itself, by absolute path. Its sessions are recorded in
+  full, but always under an empty project label —
+  [why that is](../internals/telemetry-desktop-sessions.md).
 
-Until you do both, the launches you have not covered still record everything
-else; they just group under an empty project label. `make telemetry-status`
-reports how many events in the last 24 hours arrived untagged.
+Until the `PATH` entries are picked up, terminal and IDE launches behave the
+same way — everything else is recorded, grouped under an empty label.
+`make telemetry-status` reports how many events in the last 24 hours arrived
+untagged; with the desktop app in use that count is never zero.
 
 To override the name for one session — a worktree that should report as its
 parent repo, say — set it yourself and the shim leaves it alone:

@@ -71,6 +71,20 @@ Only `service_name` and `project` are stream labels; everything else is
 structured metadata. That keeps the number of streams tiny — one per project —
 while leaving every field filterable.
 
+## Two launchers, two service names
+
+The desktop app spawns its CLI with `OTEL_SERVICE_NAME=claude-code-desktop`,
+where every other launcher reports `claude-code`. A query pinned to
+`service_name="claude-code"` therefore returns nothing for desktop sessions,
+however much they produced — silently, since a stream selector that matches no
+stream is not an error. Everything that reads events matches
+`service_name=~"claude-code.*"` instead, which keeps the two distinguishable
+rather than flattening them into one name.
+
+The same spawn is why those sessions carry no `project` label:
+[Why desktop app sessions have no project label](telemetry-desktop-sessions.md)
+covers that, and what was tried.
+
 ## Failure modes worth knowing
 
 **Loki stops accepting writes when its disk fills.** The guard trips at

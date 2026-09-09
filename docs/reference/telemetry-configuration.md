@@ -80,13 +80,14 @@ by the files on the next reload.
 | Claude Code — Overview | `claude-code-overview` | Loki for spend, tokens and requests; Prometheus for session, commit, PR and line counts |
 | Claude Code — Deep Dive | `claude-code-deep-dive` | Loki for latency, tools, permissions and errors; Tempo for traces |
 
-## PATH shim
+## The tagging shim
 
 `telemetry/shell/claude-shim` is a `sh` script that sets
 `OTEL_RESOURCE_ATTRIBUTES=project=<repo>` from the current git root and then
 `exec`s the real binary, which it finds by rescanning `PATH` with its own
 directory skipped. `CLAUDE_REAL_BIN` overrides that search. A `project=` the
-caller already set is left alone, so a per-session override still wins.
+caller already set is left alone, so a per-session override still wins; an
+`OTEL_RESOURCE_ATTRIBUTES` set by the launcher is appended to, not replaced.
 
 `make enable-telemetry` installs it in three places; `make disable-telemetry`
 removes all three.
@@ -95,11 +96,19 @@ removes all three.
 |---|---|---|
 | The shim | `~/.claude/shims/claude` → this repo | — |
 | `PATH` for terminals | a marked block in `~/.zshrc` | sessions started from a shell |
-| `PATH` for everything else | `~/.config/environment.d/10-docschemy-claude-telemetry.conf` | the desktop app, IDE extensions, systemd user units |
+| `PATH` for everything else | `~/.config/environment.d/10-docschemy-claude-telemetry.conf` | IDE extensions, systemd user units |
 
 The shim is symlinked rather than copied, so editing it here takes effect on the
 next launch. The `environment.d` file is read at login, so graphical sessions
 pick it up only after a re-login.
+
+All three are the same mechanism — get the shim onto `PATH` ahead of the real
+binary — which is why the desktop app is not among them. It `exec`s a Claude
+Code build it downloads itself, at
+`~/.config/Claude/claude-code/<version>/claude`, and never resolves the name
+through `PATH`, so its sessions arrive with no project label —
+[Why desktop app sessions have no project label](../internals/telemetry-desktop-sessions.md)
+covers what was tried and why nothing is installed there.
 
 It sets a different key from anything in `settings.json`, so the two never
 compete: shared transport settings come from the settings file, per-session
@@ -113,9 +122,15 @@ reach them through Grafana's datasource proxy, which is what
 
 ```sh
 curl -sG http://localhost:3000/api/datasources/proxy/uid/claude-loki/loki/api/v1/query \
-  --data-urlencode 'query=sum(sum_over_time({service_name="claude-code"} | event_name="api_request" | unwrap cost_usd [24h]))'
+  --data-urlencode 'query=sum(sum_over_time({service_name=~"claude-code.*"} | event_name="api_request" | unwrap cost_usd [24h]))'
 ```
 
 Events carry `project` and `service_name` as stream labels; every other field
 (`model`, `cost_usd`, `duration_ms`, `tool_name`, `trace_id`, …) is structured
 metadata, filtered with `| key="value"` and summed with `| unwrap key`.
+
+`service_name` depends on the launcher: sessions started from a shell or an IDE
+report as `claude-code`, and the desktop app spawns its CLI with
+`OTEL_SERVICE_NAME=claude-code-desktop`. Match both with
+`service_name=~"claude-code.*"`, which is what the dashboards and
+`make telemetry-status` do; `terminal_type` still tells the two apart.
