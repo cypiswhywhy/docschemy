@@ -42,7 +42,7 @@ expecting data. New sessions are collected automatically.
 
 Open <http://localhost:3000> — no login — and pick the **Claude Code** folder.
 It holds two dashboards: **Overview** for spend, and **Deep Dive** for latency,
-tools and failures.
+tools, skills, plugins, hooks and failures.
 
 [Read the telemetry dashboards](telemetry-dashboards.md) walks through every
 panel on both, with screenshots.

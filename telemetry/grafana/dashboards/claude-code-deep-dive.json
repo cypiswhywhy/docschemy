@@ -92,11 +92,94 @@
       "targets": [{ "refId": "A", "expr": "sum by (decision, source) (count_over_time({service_name=~\"claude-code.*\", project=~\"$project\"} | event_name=\"tool_decision\" [$__auto]))", "legendFormat": "{{decision}} via {{source}}" }]
     },
 
-    { "type": "row", "title": "Failures", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 34 }, "collapsed": false },
+    { "type": "row", "title": "Skills, plugins and hooks", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 34 }, "collapsed": false },
+    {
+      "type": "table", "title": "Skills used", "id": 40,
+      "description": "One row per skill and way it was started, from the skill_activated event. Counts every skill, including ones you typed as a slash command.",
+      "datasource": { "type": "loki", "uid": "claude-loki" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 35 },
+      "fieldConfig": { "defaults": { "custom": { "minWidth": 50 } }, "overrides": [{ "matcher": { "id": "byName", "options": "Activations" }, "properties": [{ "id": "custom.width", "value": 120 }] }] },
+      "options": { "showHeader": true },
+      "targets": [{ "refId": "A", "queryType": "instant", "expr": "sum by (skill_name, invocation_trigger, skill_source) (count_over_time({service_name=~\"claude-code.*\", project=~\"$project\"} | event_name=\"skill_activated\" [$__range]))" }],
+      "transformations": [
+        { "id": "labelsToFields", "options": {} },
+        { "id": "merge", "options": {} },
+        { "id": "organize", "options": { "excludeByName": { "Time": true }, "indexByName": { "skill_name": 0, "invocation_trigger": 1, "skill_source": 2, "Value #A": 3 }, "renameByName": { "skill_name": "Skill", "invocation_trigger": "Started by", "skill_source": "Source", "Value #A": "Activations" } } },
+        { "id": "sortBy", "options": { "sort": [{ "field": "Activations", "desc": true }] } }
+      ]
+    },
+    {
+      "type": "timeseries", "title": "Skill activations", "id": 41,
+      "datasource": { "type": "loki", "uid": "claude-loki" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 35 },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "bars", "stacking": { "mode": "normal" }, "fillOpacity": 80, "lineWidth": 0 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "right", "calcs": ["sum"] } },
+      "targets": [{ "refId": "A", "expr": "sum by (skill_name) (count_over_time({service_name=~\"claude-code.*\", project=~\"$project\"} | event_name=\"skill_activated\" [$__auto]))", "legendFormat": "{{skill_name}}" }]
+    },
+    {
+      "type": "timeseries", "title": "Hook runs by hook", "id": 42,
+      "description": "One run per hook event, however many hook commands matched it.",
+      "datasource": { "type": "loki", "uid": "claude-loki" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 51 },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "bars", "stacking": { "mode": "normal" }, "fillOpacity": 80, "lineWidth": 0 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "right", "calcs": ["sum"] } },
+      "targets": [{ "refId": "A", "expr": "sum by (hook_name) (count_over_time({service_name=~\"claude-code.*\", project=~\"$project\"} | event_name=\"hook_execution_complete\" [$__auto]))", "legendFormat": "{{hook_name}}" }]
+    },
+    {
+      "type": "timeseries", "title": "Hook duration p95, by hook", "id": 43,
+      "description": "Combined time of all hook commands matched on one hook event.",
+      "datasource": { "type": "loki", "uid": "claude-loki" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 51 },
+      "fieldConfig": { "defaults": { "unit": "ms", "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 0, "showPoints": "never" } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "right", "calcs": ["max"] } },
+      "targets": [{ "refId": "A", "expr": "quantile_over_time(0.95, {service_name=~\"claude-code.*\", project=~\"$project\"} | event_name=\"hook_execution_complete\" | unwrap total_duration_ms [$__auto]) by (hook_name)", "legendFormat": "{{hook_name}}" }]
+    },
+    {
+      "type": "timeseries", "title": "Hook blocks and errors", "id": 44,
+      "datasource": { "type": "loki", "uid": "claude-loki" },
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 59 },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "bars", "stacking": { "mode": "normal" }, "fillOpacity": 80, "lineWidth": 0 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "right", "calcs": ["sum"] } },
+      "targets": [
+        { "refId": "A", "expr": "sum by (hook_name) (sum_over_time({service_name=~\"claude-code.*\", project=~\"$project\"} | event_name=\"hook_execution_complete\" | num_blocking > 0 | unwrap num_blocking [$__auto]))", "legendFormat": "{{hook_name}} blocked" },
+        { "refId": "B", "expr": "sum by (hook_name) (sum_over_time({service_name=~\"claude-code.*\", project=~\"$project\"} | event_name=\"hook_execution_complete\" | num_non_blocking_error > 0 | unwrap num_non_blocking_error [$__auto]))", "legendFormat": "{{hook_name}} error" }
+      ]
+    },
+    {
+      "type": "table", "title": "Plugins loaded", "id": 45,
+      "datasource": { "type": "loki", "uid": "claude-loki" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 43 },
+      "fieldConfig": { "defaults": { "custom": { "minWidth": 50 } }, "overrides": [{ "matcher": { "id": "byName", "options": "Loads" }, "properties": [{ "id": "custom.width", "value": 120 }] }] },
+      "options": { "showHeader": true },
+      "targets": [{ "refId": "A", "queryType": "instant", "expr": "sum by (plugin_name, plugin_version, marketplace_name) (count_over_time({service_name=~\"claude-code.*\", project=~\"$project\"} | event_name=\"plugin_loaded\" [$__range]))" }],
+      "transformations": [
+        { "id": "labelsToFields", "options": {} },
+        { "id": "merge", "options": {} },
+        { "id": "organize", "options": { "excludeByName": { "Time": true }, "indexByName": { "plugin_name": 0, "plugin_version": 1, "marketplace_name": 2, "Value #A": 3 }, "renameByName": { "plugin_name": "Plugin", "plugin_version": "Version", "marketplace_name": "Marketplace", "Value #A": "Loads" } } },
+        { "id": "sortBy", "options": { "sort": [{ "field": "Loads", "desc": true }] } }
+      ]
+    },
+    {
+      "type": "table", "title": "Registered hooks", "id": 46,
+      "description": "Which hook events are wired up, and by what. Plugin is empty for hooks that come from settings files.",
+      "datasource": { "type": "loki", "uid": "claude-loki" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 43 },
+      "fieldConfig": { "defaults": { "custom": { "minWidth": 50 } }, "overrides": [{ "matcher": { "id": "byName", "options": "Registrations" }, "properties": [{ "id": "custom.width", "value": 120 }] }] },
+      "options": { "showHeader": true },
+      "targets": [{ "refId": "A", "queryType": "instant", "expr": "sum by (hook_event, hook_source, plugin_name) (count_over_time({service_name=~\"claude-code.*\", project=~\"$project\"} | event_name=\"hook_registered\" [$__range]))" }],
+      "transformations": [
+        { "id": "labelsToFields", "options": {} },
+        { "id": "merge", "options": {} },
+        { "id": "organize", "options": { "excludeByName": { "Time": true }, "indexByName": { "hook_event": 0, "hook_source": 1, "plugin_name": 2, "Value #A": 3 }, "renameByName": { "hook_event": "Hook event", "hook_source": "Source", "plugin_name": "Plugin", "Value #A": "Registrations" } } },
+        { "id": "sortBy", "options": { "sort": [{ "field": "Registrations", "desc": true }] } }
+      ]
+    },
+
+    { "type": "row", "title": "Failures", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 65 }, "collapsed": false },
     {
       "type": "timeseries", "title": "API errors and refusals", "id": 20,
       "datasource": { "type": "loki", "uid": "claude-loki" },
-      "gridPos": { "h": 7, "w": 8, "x": 0, "y": 35 },
+      "gridPos": { "h": 7, "w": 8, "x": 0, "y": 66 },
       "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "bars", "stacking": { "mode": "normal" }, "fillOpacity": 80, "lineWidth": 0 } }, "overrides": [] },
       "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
       "targets": [
@@ -107,25 +190,25 @@
     {
       "type": "logs", "title": "Error and refusal events", "id": 21,
       "datasource": { "type": "loki", "uid": "claude-loki" },
-      "gridPos": { "h": 7, "w": 16, "x": 8, "y": 35 },
+      "gridPos": { "h": 7, "w": 16, "x": 8, "y": 66 },
       "options": { "showTime": true, "wrapLogMessage": true, "sortOrder": "Descending", "enableLogDetails": true },
       "targets": [{ "refId": "A", "expr": "{service_name=~\"claude-code.*\", project=~\"$project\"} | event_name=~\"api_error|api_refusal|internal_error\"", "maxLines": 200 }]
     },
     {
       "type": "timeseries", "title": "MCP server connections", "id": 22,
       "datasource": { "type": "loki", "uid": "claude-loki" },
-      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 42 },
+      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 73 },
       "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "bars", "stacking": { "mode": "normal" }, "fillOpacity": 80, "lineWidth": 0 } }, "overrides": [] },
       "options": { "legend": { "displayMode": "table", "placement": "right", "calcs": ["sum"] } },
       "targets": [{ "refId": "A", "expr": "sum by (server_name, status) (count_over_time({service_name=~\"claude-code.*\", project=~\"$project\"} | event_name=\"mcp_server_connection\" [$__auto]))", "legendFormat": "{{server_name}} {{status}}" }]
     },
 
-    { "type": "row", "title": "Prompts and traces", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 49 }, "collapsed": false },
+    { "type": "row", "title": "Prompts and traces", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 80 }, "collapsed": false },
     {
       "type": "logs", "title": "Prompts", "id": 30,
       "description": "Prompt text appears only when OTEL_LOG_USER_PROMPTS=1.",
       "datasource": { "type": "loki", "uid": "claude-loki" },
-      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 50 },
+      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 81 },
       "options": { "showTime": true, "wrapLogMessage": true, "sortOrder": "Descending", "enableLogDetails": true },
       "targets": [{ "refId": "A", "expr": "{service_name=~\"claude-code.*\", project=~\"$project\"} | event_name=\"user_prompt\"", "maxLines": 200 }]
     },
@@ -133,7 +216,7 @@
       "type": "table", "title": "Recent traces", "id": 31,
       "description": "Requires CLAUDE_CODE_ENHANCED_TELEMETRY_BETA=1. Click a trace to open the span tree.",
       "datasource": { "type": "tempo", "uid": "claude-tempo" },
-      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 50 },
+      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 81 },
       "options": { "showHeader": true },
       "targets": [{ "refId": "A", "queryType": "traceql", "query": "{resource.service.name=~\"claude-code.*\"}", "limit": 50, "tableType": "traces" }]
     }

@@ -78,7 +78,7 @@ by the files on the next reload.
 | Dashboard | UID | Source of its numbers |
 |---|---|---|
 | Claude Code — Overview | `claude-code-overview` | Loki for spend, tokens and requests; Prometheus for session, commit, PR and line counts |
-| Claude Code — Deep Dive | `claude-code-deep-dive` | Loki for latency, tools, permissions and errors; Tempo for traces |
+| Claude Code — Deep Dive | `claude-code-deep-dive` | Loki for latency, tools, permissions, skills, plugins, hooks and errors; Tempo for traces |
 
 ## The tagging shim
 
