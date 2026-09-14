@@ -4,8 +4,9 @@ A panel-by-panel tour of what `make enable-telemetry` puts on
 <http://localhost:3000>. Set the stack up first — see
 [Collect telemetry from your Claude Code sessions](telemetry.md).
 
-Every figure below is a real capture, filtered to four projects over 30 days.
-Yours will show your own repositories.
+Every figure below is a real capture over 30 days, filtered to four projects
+except the skills, plugins and hooks figure, which covers all of them. Yours
+will show your own repositories.
 
 ## The two dashboards
 
@@ -16,7 +17,7 @@ behaviour.
 | Dashboard | Answers | Read when |
 |---|---|---|
 | Overview | What did I spend, on which model, on which project, and what came back for it | Monthly, or when a bill surprises you |
-| Deep Dive | Which requests were slow, which tools failed, which permissions you granted | After a session that felt wrong |
+| Deep Dive | Which requests were slow, which tools failed, which permissions you granted, which skills, plugins and hooks ran | After a session that felt wrong, or before pruning your setup |
 
 ## Overview: where the money went
 
@@ -94,6 +95,30 @@ tool that is both frequent and slow — `Bash` here, at 425 calls and a p95 of
 `accept via user_temporary` count means you are answering prompts by hand that
 a settings rule could answer for you; `reject` counts tell you where the model
 keeps trying something you do not want.
+
+## Deep Dive: skills, plugins and hooks
+
+![The Skills, plugins and hooks section of the Deep Dive dashboard. Skills used lists codebase-maintenance started by user-slash 8 times, gtd-project 6, gtd-update 4, and superpowers:brainstorming started by claude-proactive 3 times. Plugins loaded shows i-have-adhd 0.2.0 at 97 loads and engineering-practices 1.1.3 at 79, with older engineering-practices versions 1.1.0 and 1.0.0 at 9 and 2. Registered hooks shows PostToolUse, UserPromptSubmit and Notification hooks from userSettings with no plugin, and SessionStart and Stop hooks from plugins. Hook runs by hook is dominated by PostToolUse:Bash at 3.05 thousand runs, and hook duration p95 stays under 600 ms. Hook blocks and errors shows Stop blocked 14 times and Stop error 4 times, all after 09/09.](../assets/telemetry-deep-dive-skills.png)
+
+**Skills used** lists every skill that ran, including the ones you typed as a
+slash command. **Started by** reads `user-slash` when you typed it and
+`claude-proactive` when Claude picked it on its own. A skill you installed but
+never see in this table over a month is one you can remove.
+
+**Plugins loaded** lists each plugin version that loaded in the range. Two
+versions of the same plugin means some sessions were still on the older one.
+
+**Registered hooks** shows which hook events are wired up, and by which plugin.
+An empty **Plugin** column means the hook comes from a settings file.
+
+**Hook runs by hook** against **Hook duration p95** is the same pair as for
+tools. A hook runs on every matching event, so a slow hook on a frequent event
+such as `PostToolUse:Bash` costs more than a slow one on `SessionStart`. Both
+panels count one run per event, however many hook commands matched it.
+
+**Hook blocks and errors** counts hooks that blocked the action, and hooks that
+failed without blocking. A `blocked` count on `Stop` means a hook refused to let
+Claude end its turn.
 
 The **Failures** and **Prompts and traces** sections further down are empty
 until something goes wrong, which is the point — a populated `API errors and
